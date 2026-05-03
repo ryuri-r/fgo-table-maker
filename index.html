@@ -244,8 +244,8 @@ body{
   <h1>FGO <span>Table Maker</span></h1>
   <span class="hint">행 추가 → 왼쪽 아이콘 클릭으로 추가 · 레이블에 아이콘+텍스트 가능</span>
   <select class="tb-sel" id="gSrv" onchange="changeSrv()" style="margin-left:auto">
+    <option value="KR">KR</option>
     <option value="JP">JP</option>
-    <option value="NA">NA</option>
   </select>
 </div>
 
@@ -319,7 +319,7 @@ body{
 
 <script>
 /* ══ STATE ══ */
-let server = 'JP';
+let server = 'KR';
 let data = { mat:[], svt:[], evt:[], etc:[] }; // loaded pool data
 let loaded = {};          // which tabs are loaded
 let curTab = 'mat';
@@ -378,12 +378,8 @@ async function loadTab(tab) {
 }
 
 async function loadAllItems() {
-  // NA: nice_item.json만 존재. JP: nice_item_lang_en.json 우선
   let items = null;
-  const candidates = server === 'JP'
-    ? ['nice_item_lang_en.json', 'nice_item.json']
-    : ['nice_item.json', 'nice_item_lang_en.json'];
-  for (const fname of candidates) {
+  for (const fname of ['nice_item.json']) {
     try {
       const r = await fetch(`https://api.atlasacademy.io/export/${server}/${fname}`);
       if (r.ok) { items = await r.json(); break; }
@@ -412,10 +408,10 @@ async function loadAllItems() {
 }
 
 async function loadServants() {
-  // NA는 basic_svt.json (lang_en 없음), JP는 basic_svt_lang_en.json
+  // KR/JP 모두 basic_svt.json 사용 (JP는 추가로 lang_en 시도)
   const candidates = server === 'JP'
     ? ['basic_svt_lang_en.json', 'basic_svt.json']
-    : ['basic_svt.json', 'basic_svt_lang_en.json'];
+    : ['basic_svt.json'];
   let r = null;
   for (const fname of candidates) {
     try {
@@ -656,4 +652,6 @@ function clearLicon(rowId) {
 
 /* ══ MISC ══ */
 function syncTitle() { document.getElementById('exTtl').textContent = document.getElementById('tableTitle').value || 'FGO 드롭 테이블'; }
-function applyTheme() { docume
+function applyTheme() { document.getElementById('exportArea').className = document.getElementById('theme').value; }
+function clearAll() { if (rows.length && confirm('전체 삭제?')) { rows=[]; activeRowId=null; rerender(); } }
+function setPool(h) { docume
