@@ -418,11 +418,12 @@ async function loadAllItems() {
 
   // 이미지 없거나 불필요한 아이템 숨김
   const HIDDEN_IDS = new Set([301, 6008, 6108, 6208, 6504, 7008, 7108]);
+  const HIDDEN_TYPES = new Set(['itemSelect']);
 
   for (const it of items) {
     if (!it.id || !it.name) continue;
      if (HIDDEN_IDS.has(it.id)) continue;
-    if (it.name.includes('로그인 보너스 교환티켓')) continue;
+    if (HIDDEN_TYPES.has(it.type)) continue;
     // icon: basic 포맷은 icon 필드 없을 수 있음 → 정적 URL로 대체
     const icon = (it.icon && it.icon.startsWith('http'))
       ? it.icon
