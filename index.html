@@ -384,41 +384,34 @@ async function loadTab(tab) {
 }
 
 async function fetchWithTimeout(url, ms=15000) {
-  console.log('[FGO] fetch start:', url);
   const ctrl = new AbortController();
-  const tid = setTimeout(() => { console.log('[FGO] fetch ABORT timeout'); ctrl.abort(); }, ms);
+  const tid = setTimeout(() => ctrl.abort(), ms);
   try {
     const r = await fetch(url, { signal: ctrl.signal });
-    console.log('[FGO] fetch headers ok, status:', r.status);
     const data = await r.json();
     clearTimeout(tid);
-    console.log('[FGO] fetch done, items:', data.length);
     return data;
   } catch(e) {
     clearTimeout(tid);
-    console.error('[FGO] fetch error:', e.name, e.message);
     throw e;
   }
 }
 
 async function loadAllItems() {
-  console.log('[FGO] loadAllItems start, server:', server);
   let items = null;
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      console.log('[FGO] attempt', attempt);
       items = await fetchWithTimeout(
         `https://api.atlasacademy.io/export/${server}/nice_item.json`, 12000
       );
       break;
     } catch(e) {
-      console.error('[FGO] attempt', attempt, 'failed:', e.message);
       if (attempt === 2) throw new Error(`아이템 로드 실패 (${e.message})`);
     }
   }
   if (!items) throw new Error('아이템 목록 로드 실패');
 
-  const evtTypes  = new Set(['eventItem','tdAndEventPoint','eventRewardSet','eventPoint']);
+  const evtTypes  = new Set(['eventItem',"tdAndEventPoint','eventRewardSet','eventPoint']);
   const etcTypes  = new Set(['chargeStone','friendPoint','continueItem','questReward','svtCoin']);
 
   data.mat = []; data.evt = []; data.etc = [];
@@ -658,4 +651,85 @@ function rerender() {
         ).join('')
       : `<span class="empty-hint">← 클릭해서 추가</span>`;
 
-    h += `<div class="trow $
+    h += `<div class="trow ${isSel?'sel':''}" onclick="setActive(${row.id})">
+      <div class="rctrl" data-nex>
+        <button class="rc" onclick="moveRow(${row.id},-1);event.stopPropagation()">↑</button>
+        <button class="rc" onclick="moveRow(${row.id},+1);event.stopPropagation()">↓</button>
+        <button class="rc dl" onclick="removeRow(${row.id});event.stopPropagation()">✕</button>
+      </div>
+      <div class="rlabel">
+        ${iconSlot}
+        <textarea id="ltxt-${row.id}" class="ltxt" rows="2"
+          oninput="updateLabel(${row.id},this.value)"
+          onclick="event.stopPropagation()">${row.label}</textarea>
+      </div>
+      <div class="ritems">${itemsH}</div>
+    </div>`;
+  }
+  body.innerHTML = h;
+}
+
+function clearLicon(rowId) {
+  const r = rows.find(r => r.id === rowId);
+  if (r) { r.labelIcon = null; rerender(); }
+}
+
+/* ══ MISC ══ */
+function syncTitle() { document.getElementById('exTtl').textContent = document.getElementById('tableTitle').value || 'FGO 드롭 테이블'; }
+function applyTheme() { document.getElementById('exportArea').className = document.getElementById('theme').value; }
+function clearAll() { if (rows.length && confirm('전체 삭제?')) { rows=[]; activeRowId=null; rerender(); } }
+function setPool(h) { document.getElementById('pool').innerHTML = h; }
+function setFoot(t) { document.getElementById('lpFoot').textContent = t; }
+function setSb(t) { document.getElementById('sb').textContent = t; }
+
+/* ══ PNG EXPORT ══ */
+async function exportPNG() {
+  const area = document.getElementById('exportArea');
+  setSb('PNG 생성 중…');
+
+  const nexEls = area.querySelectorAll('[data-nex]');
+  nexEls.forEach(el => el.style.display='none');
+  const selEl = area.querySelector('.sel');
+  if (selEl) selEl.classList.remove('sel');
+
+  try {
+    const imgs = area.querySelectorAll('img');
+    await Promise.allSettled([...imgs].map(async img => {
+      if (!img.src || img.src.startsWith('data:')) return;
+      try {
+        const r = await fetch(img.src, {mode:'cors'});
+        const blob = await r.blob();
+        img.src = await new Promise((res,rej) => {
+          const fr = new FileReader();
+          fr.onload = ()=>res(fr.result); fr.onerror=rej;
+          fr.readAsDataURL(blob);
+        });
+      } catch {}
+    }));
+
+    const canvas = await html2canvas(area, { backgroundColor:null, scale:2, useCORS:true, allowTaint:false, logging:false });
+    const link = document.createElement('a');
+    const fname = (document.getElementById('tableTitle').value||'fgo_table').replace(/[^\w가-힣\s]/g,'').trim().replace(/\s+/g,'_')||'fgo_table';
+    link.download = fname+'.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    setSb('PNG 저장 완료 ✓');
+  } catch(e) { setSb('오류: '+e.message); }
+  finally {
+    nexEls.forEach(el => el.style.display='');
+    if (selEl) selEl.classList.add('sel');
+  }
+}
+
+/* ══ 인라인 핸들러에서 접근 가능하도록 전역 등록 ══ */
+Object.assign(window, {
+  changeSrv, switchTab, switchMtab,
+  filterPool, filterModal,
+  clickItem, addRow, removeRow, moveRow, setActive, updateLabel, removeItem,
+  openIconModal, closeModal, pickLabelIcon, clearLabelIcon, clearLicon,
+  syncTitle, applyTheme, clearAll, exportPNG,
+  dStart, dOver, dLeave, dDrop,
+});
+</script>
+</body>
+</html>
