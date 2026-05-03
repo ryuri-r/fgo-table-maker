@@ -322,6 +322,7 @@ body{
 let server = 'KR';
 let data = { mat:[], svt:[], evt:[], etc:[] }; // loaded pool data
 let loaded = {};          // which tabs are loaded
+let loading = {};         // 중복 로딩 방지 가드
 let curTab = 'mat';
 let curMtab = 'mat';
 
@@ -338,6 +339,7 @@ function changeSrv() {
   server = document.getElementById('gSrv').value;
   data = { mat:[], svt:[], evt:[], etc:[] };
   loaded = {};
+  loading = {};
   loadTab(curTab);
 }
 
@@ -361,7 +363,9 @@ function switchMtab(tab) {
 /* ══ LOAD DATA ══ */
 async function loadTab(tab) {
   if (loaded[tab]) { renderPool(data[tab]); return; }
-  setPool('<div style="padding:12px;color:#3a4060;font-size:11px"><span class="spin"></span> 로딩 중…</div>');
+  if (loading[tab]) return; // 이미 로딩 중이면 무시
+  loading[tab] = true;
+  setPool('<div style="padding:12px;color:var(--t2);font-size:11px"><span class="spin"></span> 로딩 중…</div>');
   setFoot('로딩 중…');
   try {
     if (tab === 'mat' || tab === 'evt' || tab === 'etc') {
@@ -369,10 +373,12 @@ async function loadTab(tab) {
     }
     if (tab === 'svt') await loadServants();
     loaded[tab] = true;
+    loading[tab] = false;
     renderPool(data[tab]);
     setFoot(`${data[tab].length}개`);
   } catch(e) {
-    setPool(`<div style="padding:12px;color:#f85149;font-size:11px">오류: ${e.message}</div>`);
+    loading[tab] = false;
+    setPool(`<div style="padding:12px;color:#c0392b;font-size:11px">오류: ${e.message} <button onclick="loading['${tab}']=false;loadTab('${tab}')" style="margin-left:6px;padding:2px 6px;font-size:11px;cursor:pointer">재시도</button></div>`);
     setFoot('실패');
   }
 }
@@ -651,7 +657,4 @@ function clearLicon(rowId) {
 }
 
 /* ══ MISC ══ */
-function syncTitle() { document.getElementById('exTtl').textContent = document.getElementById('tableTitle').value || 'FGO 드롭 테이블'; }
-function applyTheme() { document.getElementById('exportArea').className = document.getElementById('theme').value; }
-function clearAll() { if (rows.length && confirm('전체 삭제?')) { rows=[]; activeRowId=null; rerender(); } }
-function setPool(h) { docume
+function syncTitle() { document.getElem
