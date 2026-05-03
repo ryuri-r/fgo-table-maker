@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<title>FGO Table Maker</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:#111318;color:#e0e6f0;font-family:'Segoe UI','Noto Sans KR',sans-serif;height:100vh;display:flex;flex-direction:column;overflow:hidden;font-size:13px}
+
+.topbar{background:#1a1f2e;border-bottom:1px solid #22273a;padding:8px 14px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.topbar h1{color:#f0c040;font-size:15px;font-weight:700}
+.topbar .hint{font-size:10px;color:#3a4060;margin-left:8px}
+
+.wrap{display:flex;flex:1;overflow:hidden}
+
+/* ── LEFT ── */
+.left{width:264px;border-right:1px solid #22273a;background:#161b27;display:flex;flex-direction:column;flex-shrink:0}
+
+.tabs{display:flex;border-bottom:1px solid #22273a;flex-shrink:0}
+.tab{flex:1;padding:8px 4px;font-size:11px;text-align:center;cursor:pointer;color:#4a5070;border-bottom:2px solid transparent;transition:.12s;background:none;border-top:none;border-left:none;border-right:none}
+.tab:hover{color:#e0e6f0;background:#1e2535}
+.tab.active{color:#f0c040;border-bottom-color:#f0c040}
+
+.lp-search{padding:7px 8px;border-bottom:1px solid #22273a;display:flex;gap:5px;flex-shrink:0}
+.lp-search input{flex:1;min-width:0;background:#0e1118;color:#e0e6f0;border:1px solid #2a3148;border-radius:5px;padding:5px 8px;font-size:11px;outline:none}
+.lp-search input:focus{border-color:#4a6cf7}
+.srv-sel{background:#0e1118;color:#e0e6f0;border:1px solid #2a3148;border-radius:5px;padding:4px 6px;font-size:11px;cursor:pointer}
+
+.pool{flex:1;overflow-y:auto;padding:6px;display:flex;flex-wrap:wrap;gap:4px;align-content:flex-start}
+.pool::-webkit-scrollbar{width:4px}
+.pool::-webkit-scrollbar-thumb{background:#2a3148;border-radius:2px}
+
+/* pool item – icon only */
+.pi{width:50px;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;border-radius:6px;padding:4px 2px;border:2px solid transparent;transition:.12s;position:relative}
+.pi:hover{background:#1e2535;border-color:#4a6cf7}
+.pi img{width:42px;height:42px;object-fit:contain;border-radius:4px}
+.pi .pn{font-size:7.5px;color:#5060a0;text-align:center;line-height:1.2;max-width:48px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+/* servant face is round */
+.pi.svt img{border-radius:50%;border:1px solid #2a3148}
+
+.lp-foot{padding:4px 8px;border-top:1px solid #22273a;font-size:10px;color:#3a4060;flex-shrink:0}
+
+/* ── RIGHT ── */
+.right{flex:1;display:flex;flex-direction:column;overflow:hidden}
+
+.toolbar{background:#161b27;border-bottom:1px solid #22273a;padding:7px 12px;display:flex;align-items:center;gap:7px;flex-wrap:wrap;flex-shrink:0}
+.btn{background:#1e2535;color:#e0e6f0;border:1px solid #2a3148;border-radius:5px;padding:5px 10px;font-size:12px;cursor:pointer;white-space:nowrap;transition:.12s}
+.btn:hover{background:#2a3348;border-color:#4a6cf7}
+.btn.pri{background:#4a6cf7;border-color:#4a6cf7;color:#fff}
+.btn.pri:hover{background:#5a7af8}
+.btn.grn{background:#238636;border-color:#238636;color:#fff}
+.btn.grn:hover{background:#2ea043}
+.tbtitle{background:#0e1118;color:#f0c040;border:1px solid #2a3148;border-radius:5px;padding:5px 9px;font-size:13px;font-weight:700;width:190px;outline:none}
+.tbtitle:focus{border-color:#4a6cf7}
+.tb-sel{background:#0e1118;color:#e0e6f0;border:1px solid #2a3148;border-radius:5px;padding:5px 8px;font-size:11px;cursor:pointer}
+.sep{width:1px;height:18px;background:#22273a;flex-shrink:0}
+
+/* ── canvas ── */
+.cvs-scroll{flex:1;overflow:auto;padding:20px;background:#0a0c12}
+
+/* ── export area ── */
+#exportArea{display:inline-block;min-width:360px;border-radius:10px;overflow:hidden;background:var(--eb,#111318)}
+.ex-hdr{padding:9px 14px;background:var(--ehb,#1a1f2e);border-bottom:2px solid var(--acc,#f0c040)}
+.ex-ttl{font-size:14px;font-weight:700;color:var(--acc,#f0c040)}
+.ex-body{padding:8px 10px;display:flex;flex-direction:column;gap:4px}
+
+/* ── table row ── */
+.trow{display:flex;align-items:stretch;border-radius:6px;overflow:visible;background:var(--rb,#1a1f2e);position:relative}
+.trow.sel{outline:2px solid #4a6cf7;outline-offset:1px}
+
+/* row controls */
+.rctrl{display:flex;flex-direction:column;gap:2px;padding:4px 3px;background:var(--rb,#1a1f2e);flex-shrink:0}
+.rc{background:none;border:1px solid #22273a;border-radius:3px;color:#3a4060;cursor:pointer;width:18px;height:18px;font-size:10px;display:flex;align-items:center;justify-content:center;transition:.12s}
+.rc:hover{background:#2a3348;color:#e0e6f0}
+.rc.dl:hover{border-color:#da3633;color:#da3633}
+
+/* ── row label ── */
+.rlabel{
+  min-width:100px;max-width:100px;
+  display:flex;align-items:center;gap:5px;
+  padding:5px 8px;
+  background:var(--lb,#232938);
+  border-right:2px solid var(--acc,#f0c040);
+  align-self:stretch;
+}
+/* label icon slot */
+.licon-slot{
+  width:38px;height:38px;flex-shrink:0;
+  border-radius:5px;border:1.5px dashed #2a3148;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:.12s;position:relative;overflow:hidden;
+  color:#3a4060;font-size:16px;
+}
+.licon-slot:hover{border-color:#4a6cf7;color:#4a6cf7}
+.licon-slot img{width:36px;height:36px;object-fit:contain;border-radius:3px}
+.licon-slot.svt img{border-radius:50%}
+.licon-slot .ldel{display:none;position:absolute;inset:0;background:rgba(218,54,51,.8);align-items:center;justify-content:center;font-size:13px;color:#fff;cursor:pointer}
+.licon-slot:hover .ldel{display:flex}
+/* label text */
+.ltxt{flex:1;min-width:0;background:none;border:none;color:var(--ltc,#e0e6f0);font-size:11.5px;font-weight:600;outline:none;width:100%;line-height:1.3;word-break:break-all;resize:none;font-family:inherit}
+
+/* ── row items ── */
+.ritems{display:flex;flex-wrap:wrap;gap:4px;padding:5px 7px;flex:1;align-items:center;min-height:52px}
+
+/* item card – icon only */
+.ric{
+  width:46px;height:46px;
+  border-radius:6px;
+  border:1.5px solid var(--icbd,#22273a);
+  background:var(--icbg,#0e1118);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;position:relative;transition:.12s;
+  flex-shrink:0;
+}
+.ric:hover{border-color:#4a6cf7}
+.ric:hover .rdel{display:flex}
+.ric img{width:38px;height:38px;object-fit:contain}
+.ric.svt img{border-radius:50%}
+.rdel{display:none;position:absolute;inset:0;background:rgba(218,54,51,.75);border-radius:4px;align-items:center;justify-content:center;font-size:14px;color:#fff}
+.empty-hint{font-size:10px;color:#2a3148;padding:2px 4px}
+
+/* ── themes ── */
+.th-dark{--eb:#111318;--ehb:#1a1f2e;--rb:#1a1f2e;--lb:#232938;--icbg:#0e1118;--icbd:#22273a;--acc:#f0c040;--ltc:#e0e6f0}
+.th-blue{--eb:#070e1c;--ehb:#0c1830;--rb:#0c1830;--lb:#111f3a;--icbg:#070e1c;--icbd:#152040;--acc:#58a6ff;--ltc:#e0e6f0}
+.th-purple{--eb:#0c0518;--ehb:#160828;--rb:#160828;--lb:#1e0c38;--icbg:#0c0518;--icbd:#280c50;--acc:#c084fc;--ltc:#e0e6f0}
+.th-warm{--eb:#120a02;--ehb:#1e1005;--rb:#1e1005;--lb:#2c1808;--icbg:#120a02;--icbd:#341808;--acc:#fb923c;--ltc:#e0e6f0}
+.th-light{--eb:#f0f4ff;--ehb:#e0e6f4;--rb:#e8edf8;--lb:#d8dff0;--icbg:#f0f4ff;--icbd:#c0cce0;--acc:#4a6cf7;--ltc:#1a1f2e}
+
+/* ── icon picker modal ── */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:center;justify-content:center}
+.modal-bg.open{display:flex}
+.modal{background:#1a1f2e;border:1px solid #2a3148;border-radius:10px;width:360px;max-height:520px;display:flex;flex-direction:column;overflow:hidden}
+.modal-top{padding:10px 12px;border-bottom:1px solid #22273a;display:flex;align-items:center;gap:8px}
+.modal-top h3{flex:1;font-size:13px;color:#e0e6f0}
+.modal-tabs{display:flex;border-bottom:1px solid #22273a;flex-shrink:0}
+.mtab{flex:1;padding:6px 4px;font-size:11px;text-align:center;cursor:pointer;color:#4a5070;border-bottom:2px solid transparent;background:none;border-top:none;border-left:none;border-right:none;transition:.1s}
+.mtab:hover{color:#e0e6f0}
+.mtab.active{color:#f0c040;border-bottom-color:#f0c040}
+.modal-srch{padding:6px 8px;border-bottom:1px solid #22273a}
+.modal-srch input{width:100%;background:#0e1118;color:#e0e6f0;border:1px solid #2a3148;border-radius:5px;padding:5px 8px;font-size:11px;outline:none}
+.modal-pool{flex:1;overflow-y:auto;padding:6px;display:flex;flex-wrap:wrap;gap:4px;align-content:flex-start}
+.modal-foot{padding:6px 10px;border-top:1px solid #22273a;font-size:10px;color:#3a4060;display:flex;align-items:center;justify-content:space-between}
+
+/* spin */
+.spin{display:inline-block;width:13px;height:13px;border:2px solid #22273a;border-top-color:#4a6cf7;border-radius:50%;animation:sp .6s linear infinite;vertical-align:middle}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+.statusbar{padding:4px 12px;background:#161b27;border-top:1px solid #22273a;font-size:10px;color:#3a4060;flex-shrink:0}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>⚔️ FGO Table Maker</h1>
+  <span class="hint">행 추가 → 왼쪽 아이콘 클릭해서 추가 · 행 레이블에 아이콘+텍스트 가능</span>
+  <select class="tb-sel" id="gSrv" onchange="changeSrv()" style="margin-left:auto">
+    <option value="JP">JP</option>
+    <option value="NA">NA</option>
+  </select>
+</div>
+
+<div class="wrap">
+  <!-- ══ LEFT PANEL ══ -->
+  <div class="left">
+    <div class="tabs">
+      <button class="tab active" data-tab="mat" onclick="switchTab('mat')">재료</button>
+      <button class="tab" data-tab="svt" onclick="switchTab('svt')">서번트</button>
+      <button class="tab" data-tab="evt" onclick="switchTab('evt')">이벤트</button>
+      <button class="tab" data-tab="etc" onclick="switchTab('etc')">기타</button>
+    </div>
+    <div class="lp-search">
+      <input type="text" id="lpSrch" placeholder="이름 검색…" oninput="filterPool()"/>
+    </div>
+    <div class="pool" id="pool"><div style="padding:12px;color:#3a4060;font-size:11px"><span class="spin"></span> 로딩 중…</div></div>
+    <div class="lp-foot" id="lpFoot">—</div>
+  </div>
+
+  <!-- ══ RIGHT PANEL ══ -->
+  <div class="right">
+    <div class="toolbar">
+      <input class="tbtitle" type="text" id="tableTitle" value="FGO 드롭 테이블" oninput="syncTitle()"/>
+      <select class="tb-sel" id="theme" onchange="applyTheme()">
+        <option value="th-dark">🌑 다크</option>
+        <option value="th-blue">🌊 블루</option>
+        <option value="th-purple">💜 퍼플</option>
+        <option value="th-warm">🔥 웜</option>
+        <option value="th-light">☀️ 라이트</option>
+      </select>
+      <div class="sep"></div>
+      <button class="btn pri" onclick="addRow()">+ 행 추가</button>
+      <button class="btn" onclick="clearAll()" style="margin-left:auto">초기화</button>
+      <button class="btn grn" onclick="exportPNG()">💾 PNG</button>
+    </div>
+
+    <div class="cvs-scroll">
+      <div id="exportArea" class="th-dark">
+        <div class="ex-hdr"><span class="ex-ttl" id="exTtl">FGO 드롭 테이블</span></div>
+        <div class="ex-body" id="exBody">
+          <div style="padding:40px;text-align:center;color:#2a3148;font-size:12px">
+            [+ 행 추가] 후 왼쪽에서 아이콘 클릭
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="statusbar" id="sb">준비</div>
+  </div>
+</div>
+
+<!-- ══ ICON PICKER MODAL (행 레이블 아이콘용) ══ -->
+<div class="modal-bg" id="iconModal" onclick="closeModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-top">
+      <h3>레이블 아이콘 선택</h3>
+      <button class="btn" onclick="closeModal()" style="padding:3px 8px;font-size:11px">닫기</button>
+    </div>
+    <div class="modal-tabs">
+      <button class="mtab active" data-mtab="mat" onclick="switchMtab('mat')">재료</button>
+      <button class="mtab" data-mtab="svt" onclick="switchMtab('svt')">서번트</button>
+      <button class="mtab" data-mtab="evt" onclick="switchMtab('evt')">이벤트</button>
+      <button class="mtab" data-mtab="etc" onclick="switchMtab('etc')">기타</button>
+    </div>
+    <div class="modal-srch"><input type="text" id="mSrch" placeholder="검색…" oninput="filterModal()"/></div>
+    <div class="modal-pool" id="mPool"></div>
+    <div class="modal-foot">
+      <span id="mFoot">클릭하면 행 레이블 아이콘으로 설정</span>
+      <button class="btn" onclick="clearLabelIcon()" style="padding:3px 8px;font-size:11px;color:#da3633">아이콘 제거</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══ STATE ══ */
+let server = 'JP';
+let data = { mat:[], svt:[], evt:[], etc:[] }; // loaded pool data
+let loaded = {};          // which tabs are loaded
+let curTab = 'mat';
+let curMtab = 'mat';
+
+let rows = [];            // {id, label, labelIcon, items:[{id,name,icon,isSvt}]}
+let activeRowId = null;
+let rowCnt = 0;
+let modalTargetRowId = null; // which row's label icon we're picking
+
+/* ══ INIT ══ */
+window.onload = () => loadTab('mat');
+
+/* ══ SERVER ══ */
+function changeSrv() {
+  server = document.getElementById('gSrv').value;
+  data = { mat:[], svt:[], evt:[], etc:[] };
+  loaded = {};
+  loadTab(curTab);
+}
+
+/* ══ TAB SWITCH ══ */
+function switchTab(tab) {
+  curTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  document.getElementById('lpSrch').value = '';
+  if (!loaded[tab]) loadTab(tab);
+  else renderPool(data[tab]);
+}
+
+function switchMtab(tab) {
+  curMtab = tab;
+  document.querySelectorAll('.mtab').forEach(t => t.classList.toggle('active', t.dataset.mtab === tab));
+  document.getElementById('mSrch').value = '';
+  if (!loaded[tab]) loadTab(tab).then(() => renderModal(data[tab]));
+  else renderModal(data[tab]);
+}
+
+/* ══ LOAD DATA ══ */
+async function loadTab(tab) {
+  if (loaded[tab]) { renderPool(data[tab]); return; }
+  setPool('<div style="padding:12px;color:#3a4060;font-size:11px"><span class="spin"></span> 로딩 중…</div>');
+  setFoot('로딩 중…');
+  try {
+    if (tab === 'mat' || tab === 'evt' || tab === 'etc') {
+      if (!loaded._items) await loadAllItems();
+    }
+    if (tab === 'svt') await loadServants();
+    loaded[tab] = true;
+    renderPool(data[tab]);
+    setFoot(`${data[tab].length}개`);
+  } catch(e) {
+    setPool(`<div style="padding:12px;color:#f85149;font-size:11px">오류: ${e.message}</div>`);
+    setFoot('실패');
+  }
+}
+
+async function loadAllItems() {
+  const r = await fetch(`https://api.atlasacademy.io/export/${server}/nice_item_lang_en.json`);
+  if (!r.ok) throw new Error(`items HTTP ${r.status}`);
+  const items = await r.json();
+
+  const matTypes = new Set(['skillLvUp','svtCombineMaterial','svtLimitUp','characterSwordStone','questRewardQp']);
+  const evtTypes = new Set(['eventItem','tdAndEventPoint','eventRewardSet']);
+  const etcTypes = new Set(['chargeStone','friendPoint','continueItem','blankEarthScroll','questReward']);
+
+  data.mat = []; data.evt = []; data.etc = [];
+
+  for (const it of items) {
+    if (!it.id || !it.name) continue;
+    const icon = it.icon
+      ? (it.icon.startsWith('http') ? it.icon : `https://static.atlasacademy.io/${server}/Items/${it.id}.png`)
+      : `https://static.atlasacademy.io/${server}/Items/${it.id}.png`;
+    const obj = { id: it.id, name: it.name, icon, isSvt: false };
+    const t = it.type || '';
+    if (evtTypes.has(t)) data.evt.push(obj);
+    else if (etcTypes.has(t)) data.etc.push(obj);
+    else data.mat.push(obj); // 재료: 나머지 전부 (흉골, 증표 등 포함)
+  }
+  loaded._items = true;
+}
+
+async function loadServants() {
+  const r = await fetch(`https://api.atlasacademy.io/export/${server}/basic_svt_lang_en.json`);
+  if (!r.ok) throw new Error(`svt HTTP ${r.status}`);
+  const svts = await r.json();
+  data.svt = svts
+    .filter(s => s.collectionNo > 0)   // collectionNo > 0 = 플레이어블 서번트
+    .sort((a,b) => a.collectionNo - b.collectionNo)
+    .map(s => ({
+      id: s.id,
+      name: s.name || `No.${s.collectionNo}`,
+      // API가 face URL을 직접 제공함 → 없으면 폴백
+      icon: s.face
+        || `https://static.atlasacademy.io/${server}/Faces/f_${s.id}.png`,
+      isSvt: true,
+    }));
+}
+
+/* ══ RENDER POOL (left panel) ══ */
+function renderPool(items, parentId='pool', onClick=null) {
+  const el = document.getElementById(parentId);
+  if (!items || !items.length) { el.innerHTML='<div style="padding:10px;color:#3a4060;font-size:11px">항목 없음</div>'; return; }
+  el.innerHTML = items.slice(0,200).map(it => {
+    const cls = it.isSvt ? 'pi svt' : 'pi';
+    const fn = onClick ? `${onClick}(${it.id})` : `clickItem(${it.id})`;
+    return `<div class="${cls}" onclick="${fn}" title="${it.name}">
+      <img src="${it.icon}" onerror="this.style.opacity='.2'" crossorigin="anonymous"/>
+      <span class="pn">${it.name}</span>
+    </div>`;
+  }).join('');
+}
+
+function renderModal(items) {
+  const el = document.getElementById('mPool');
+  if (!items || !items.length) { el.innerHTML='<div style="padding:10px;color:#3a4060;font-size:11px">항목 없음</div>'; return; }
+  el.innerHTML = items.slice(0,200).map(it => {
+    const cls = it.isSvt ? 'pi svt' : 'pi';
+    return `<div class="${cls}" onclick="pickLabelIcon(${it.id})" title="${it.name}">
+      <img src="${it.icon}" onerror="this.style.opacity='.2'" crossorigin="anonymous"/>
+      <span class="pn">${it.name}</span>
+    </div>`;
+  }).join('');
+}
+
+/* ══ FILTER ══ */
+function filterPool() {
+  const q = document.getElementById('lpSrch').value.toLowerCase();
+  const items = data[curTab] || [];
+  const filtered = q ? items.filter(it => it.name.toLowerCase().includes(q)) : items;
+  renderPool(filtered.slice(0,200));
+  setFoot(`${filtered.length}개${q?` (검색: ${q})`:''}`)
+}
+
+function filterModal() {
+  const q = document.getElementById('mSrch').value.toLowerCase();
+  const items = data[curMtab] || [];
+  const filtered = q ? items.filter(it => it.name.toLowerCase().includes(q)) : items;
+  renderModal(filtered.slice(0,200));
+}
+
+/* ══ CLICK ITEM → ADD TO ROW ══ */
+function clickItem(itemId) {
+  const item = findItem(itemId);
+  if (!item) return;
+  if (!activeRowId) { addRow(); setTimeout(() => clickItem(itemId), 60); return; }
+  const row = rows.find(r => r.id === activeRowId);
+  if (!row) return;
+  row.items.push({...item});
+  rerender();
+  setSb(`"${item.name}" → ${row.label}`);
+}
+
+function findItem(id) {
+  for (const list of Object.values(data)) {
+    const found = list.find(it => it.id === id);
+    if (found) return found;
+  }
+  return null;
+}
+
+/* ══ ROW MANAGEMENT ══ */
+function addRow() {
+  const id = ++rowCnt;
+  rows.push({ id, label: `행 ${id}`, labelIcon: null, items: [] });
+  activeRowId = id;
+  rerender();
+  setTimeout(() => {
+    const el = document.getElementById(`ltxt-${id}`);
+    if (el) { el.focus(); el.select(); }
+  }, 40);
+}
+
+function removeRow(id) {
+  rows = rows.filter(r => r.id !== id);
+  if (activeRowId === id) activeRowId = rows.length ? rows[rows.length-1].id : null;
+  rerender();
+}
+
+function moveRow(id, dir) {
+  const i = rows.findIndex(r => r.id === id);
+  const t = i + dir;
+  if (t < 0 || t >= rows.length) return;
+  [rows[i], rows[t]] = [rows[t], rows[i]];
+  rerender();
+}
+
+function setActive(id) { activeRowId = id; rerender(); }
+
+function updateLabel(id, v) {
+  const r = rows.find(r => r.id === id);
+  if (r) r.label = v;
+}
+
+function removeItem(rowId, idx) {
+  const r = rows.find(r => r.id === rowId);
+  if (r) r.items.splice(idx, 1);
+  rerender();
+}
+
+/* ══ LABEL ICON MODAL ══ */
+function openIconModal(rowId) {
+  modalTargetRowId = rowId;
+  curMtab = curTab; // sync with current left tab
+  document.querySelectorAll('.mtab').forEach(t => t.classList.toggle('active', t.dataset.mtab === curMtab));
+  document.getElementById('mSrch').value = '';
+  document.getElementById('iconModal').classList.add('open');
+  const items = data[curMtab] || [];
+  renderModal(items.slice(0,200));
+}
+
+function closeModal(e) {
+  if (e && e.target !== document.getElementById('iconModal')) return;
+  document.getElementById('iconModal').classList.remove('open');
+  modalTargetRowId = null;
+}
+document.getElementById('iconModal').addEventListener('click', function(e){
+  if (e.target === this) { this.classList.remove('open'); modalTargetRowId=null; }
+});
+
+function pickLabelIcon(itemId) {
+  const item = findItem(itemId);
+  if (!item || !modalTargetRowId) return;
+  const row = rows.find(r => r.id === modalTargetRowId);
+  if (row) { row.labelIcon = {...item}; rerender(); }
+  document.getElementById('iconModal').classList.remove('open');
+  modalTargetRowId = null;
+}
+
+function clearLabelIcon() {
+  if (!modalTargetRowId) return;
+  const row = rows.find(r => r.id === modalTargetRowId);
+  if (row) { row.labelIcon = null; rerender(); }
+  document.getElementById('iconModal').classList.remove('open');
+  modalTargetRowId = null;
+}
+
+/* ══ DRAG REORDER items within row ══ */
+let dragSrc = null;
+function dStart(e, rowId, idx) { dragSrc = {rowId, idx}; e.dataTransfer.effectAllowed='move'; }
+function dOver(e, rowId, idx) {
+  e.preventDefault();
+  if (!dragSrc || dragSrc.rowId !== rowId) return;
+  e.currentTarget.classList.add('ric-hover');
+}
+function dLeave(e) { e.currentTarget.classList.remove('ric-hover'); }
+function dDrop(e, rowId, idx) {
+  e.preventDefault(); e.currentTarget.classList.remove('ric-hover');
+  if (!dragSrc || dragSrc.rowId !== rowId || dragSrc.idx === idx) return;
+  const row = rows.find(r => r.id === rowId);
+  if (!row) return;
+  const [item] = row.items.splice(dragSrc.idx, 1);
+  row.items.splice(idx, 0, item);
+  dragSrc = null; rerender();
+}
+
+/* ══ RENDER TABLE ══ */
+function rerender() {
+  const body = document.getElementById('exBody');
+  if (!rows.length) {
+    body.innerHTML='<div style="padding:40px;text-align:center;color:#2a3148;font-size:12px">[+ 행 추가] 후 왼쪽에서 아이콘 클릭</div>';
+    return;
+  }
+
+  let h = '';
+  for (const row of rows) {
+    const isSel = row.id === activeRowId;
+
+    /* label icon slot */
+    const iconSlot = row.labelIcon
+      ? `<div class="licon-slot ${row.labelIcon.isSvt?'svt':''}" onclick="openIconModal(${row.id});event.stopPropagation()">
+           <img src="${row.labelIcon.icon}" onerror="this.style.opacity='.3'" crossorigin="anonymous"/>
+           <span class="ldel" onclick="clearLicon(${row.id});event.stopPropagation()">✕</span>
+         </div>`
+      : `<div class="licon-slot" onclick="openIconModal(${row.id});event.stopPropagation()" title="아이콘 추가">+</div>`;
+
+    /* items */
+    const itemsH = row.items.length
+      ? row.items.map((it,idx) =>
+          `<div class="ric ${it.isSvt?'svt':''}"
+            draggable="true"
+            ondragstart="dStart(event,${row.id},${idx})"
+            ondragover="dOver(event,${row.id},${idx})"
+            ondragleave="dLeave(event)"
+            ondrop="dDrop(event,${row.id},${idx})"
+            title="${it.name}">
+            <img src="${it.icon}" onerror="this.style.opacity='.2'" crossorigin="anonymous"/>
+            <div class="rdel" onclick="removeItem(${row.id},${idx});event.stopPropagation()">✕</div>
+          </div>`
+        ).join('')
+      : `<span class="empty-hint">← 클릭해서 추가</span>`;
+
+    h += `<div class="trow ${isSel?'sel':''}" onclick="setActive(${row.id})">
+      <div class="rctrl" data-nex>
+        <button class="rc" onclick="moveRow(${row.id},-1);event.stopPropagation()">↑</button>
+        <button class="rc" onclick="moveRow(${row.id},+1);event.stopPropagation()">↓</button>
+        <button class="rc dl" onclick="removeRow(${row.id});event.stopPropagation()">✕</button>
+      </div>
+      <div class="rlabel">
+        ${iconSlot}
+        <textarea id="ltxt-${row.id}" class="ltxt" rows="2"
+          oninput="updateLabel(${row.id},this.value)"
+          onclick="event.stopPropagation()">${row.label}</textarea>
+      </div>
+      <div class="ritems">${itemsH}</div>
+    </div>`;
+  }
+  body.innerHTML = h;
+}
+
+function clearLicon(rowId) {
+  const r = rows.find(r => r.id === rowId);
+  if (r) { r.labelIcon = null; rerender(); }
+}
+
+/* ══ MISC ══ */
+function syncTitle() { document.getElementById('exTtl').textContent = document.getElementById('tableTitle').value || 'FGO 드롭 테이블'; }
+function applyTheme() { document.getElementById('exportArea').className = document.getElementById('theme').value; }
+function clearAll() { if (rows.length && confirm('전체 삭제?')) { rows=[]; activeRowId=null; rerender(); } }
+function setPool(h) { document.getElementById('pool').innerHTML = h; }
+function setFoot(t) { document.getElementById('lpFoot').textContent = t; }
+function setSb(t) { document.getElementById('sb').textContent = t; }
+
+/* ══ PNG EXPORT ══ */
+async function exportPNG() {
+  const area = document.getElementById('exportArea');
+  setSb('PNG 생성 중…');
+
+  const nexEls = area.querySelectorAll('[data-nex]');
+  nexEls.forEach(el => el.style.display='none');
+  const selEl = area.querySelector('.sel');
+  if (selEl) selEl.classList.remove('sel');
+
+  try {
+    const imgs = area.querySelectorAll('img');
+    await Promise.allSettled([...imgs].map(async img => {
+      if (!img.src || img.src.startsWith('data:')) return;
+      try {
+        const r = await fetch(img.src, {mode:'cors'});
+        const blob = await r.blob();
+        img.src = await new Promise((res,rej) => {
+          const fr = new FileReader();
+          fr.onload = ()=>res(fr.result); fr.onerror=rej;
+          fr.readAsDataURL(blob);
+        });
+      } catch {}
+    }));
+
+    const canvas = await html2canvas(area, { backgroundColor:null, scale:2, useCORS:true, allowTaint:false, logging:false });
+    const link = document.createElement('a');
+    const fname = (document.getElementById('tableTitle').value||'fgo_table').replace(/[^\w가-힣\s]/g,'').trim().replace(/\s+/g,'_')||'fgo_table';
+    link.download = fname+'.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    setSb('PNG 저장 완료 ✓');
+  } catch(e) { setSb('오류: '+e.message); }
+  finally {
+    nexEls.forEach(el => el.style.display='');
+    if (selEl) selEl.classList.add('sel');
+  }
+}
+</script>
+</body>
+</html>
