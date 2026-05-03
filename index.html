@@ -411,7 +411,7 @@ async function loadAllItems() {
   }
   if (!items) throw new Error('아이템 목록 로드 실패');
 
-  const evtTypes  = new Set(['eventItem',"tdAndEventPoint','eventRewardSet','eventPoint']);
+  const evtTypes  = new Set(['eventItem','tdAndEventPoint','eventRewardSet','eventPoint']);
   const etcTypes  = new Set(['chargeStone','friendPoint','continueItem','questReward','svtCoin']);
 
   data.mat = []; data.evt = []; data.etc = [];
