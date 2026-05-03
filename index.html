@@ -412,13 +412,27 @@ async function loadAllItems() {
   if (!items) throw new Error('아이템 목록 로드 실패');
 
   const evtTypes  = new Set(['eventItem','tdAndEventPoint','eventRewardSet','eventPoint']);
-  const etcTypes  = new Set(['chargeStone','friendPoint','continueItem','questReward','svtCoin']);
+  const etcTypes  = new Set(['chargeStone','friendPoint','continueItem','questReward']);
 
   data.mat = []; data.evt = []; data.etc = [];
 
   // 이미지 없거나 불필요한 아이템 숨김
-  const HIDDEN_IDS = new Set([301, 6008, 6108, 6208, 6504, 7008, 7108]);
-  const HIDDEN_TYPES = new Set(['itemSelect']);
+  const HIDDEN_IDS = new Set([
+    301, 6008, 6108, 6208, 6504, 7008, 7108,
+    5, 6, 7, 16, 17, 18, 46, 48, 49, 103, 104, 300, 1000, 2000, 4001,
+    5000, 5001, 5002, 5003, 80059,
+    94012301, 94012303, 94013001, 94013002, 94013006, 94013007, 94013008,
+    94013706, 94015308, 94016904, 94016905, 94016906, 94016907, 94016908,
+    94025404, 94025405, 94025406, 94025804, 94025805, 94025806,
+    94043007, 94054207, 94054401, 94060301, 94064307, 94065901,
+    94071701, 94073101, 94075008, 94076901, 94079401, 94080009,
+    94083401, 94083402, 94087501, 94088401, 94088501, 94088701,
+    94089602, 94090701, 94090702, 94091001, 94092202,
+    94093201, 94093202, 94093306, 94094701, 94095301,
+    94098501, 94100101, 94100301, 94136001, 94137702, 94137703, 94138201,
+    694060301, 694060302,
+  ]);
+  const HIDDEN_TYPES = new Set(['itemSelect', 'svtCoin']);
 
   for (const it of items) {
     if (!it.id || !it.name) continue;
@@ -432,7 +446,8 @@ async function loadAllItems() {
     const t = it.type || '';
     if (evtTypes.has(t))  data.evt.push(obj);
     else if (etcTypes.has(t)) data.etc.push(obj);
-    else data.mat.push(obj);
+    else if (it.id >= 94000000) data.evt.push(obj);
+      else data.mat.push(obj);
   }
   loaded._items = true;
 }
@@ -452,7 +467,7 @@ async function loadServants() {
   if (!r || !r.ok) throw new Error(`svt 로드 실패`);
   const svts = await r.json();
   data.svt = svts
-    .filter(s => s.collectionNo > 0)   // collectionNo > 0 = 플레이어블 서번트
+    .filter(s => s.collectionNo > 0 && s.type !== 'servantEquip') // 예장 제외
     .sort((a,b) => a.collectionNo - b.collectionNo)
     .map(s => ({
       id: s.id,
