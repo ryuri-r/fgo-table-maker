@@ -378,26 +378,32 @@ async function loadTab(tab) {
 }
 
 async function loadAllItems() {
-  const r = await fetch(`https://api.atlasacademy.io/export/${server}/nice_item_lang_en.json`);
-  if (!r.ok) throw new Error(`items HTTP ${r.status}`);
-  const items = await r.json();
+  // basic 포맷 시도 → 없으면 nice 포맷 폴백
+  let items = null;
+  for (const fname of ['basic_item_lang_en.json', 'basic_item.json', 'nice_item_lang_en.json']) {
+    try {
+      const r = await fetch(`https://api.atlasacademy.io/export/${server}/${fname}`);
+      if (r.ok) { items = await r.json(); break; }
+    } catch {}
+  }
+  if (!items) throw new Error('아이템 목록 로드 실패');
 
-  const matTypes = new Set(['skillLvUp','svtCombineMaterial','svtLimitUp','characterSwordStone','questRewardQp']);
-  const evtTypes = new Set(['eventItem','tdAndEventPoint','eventRewardSet']);
-  const etcTypes = new Set(['chargeStone','friendPoint','continueItem','blankEarthScroll','questReward']);
+  const evtTypes  = new Set(['eventItem','tdAndEventPoint','eventRewardSet','eventPoint']);
+  const etcTypes  = new Set(['chargeStone','friendPoint','continueItem','questReward','svtCoin']);
 
   data.mat = []; data.evt = []; data.etc = [];
 
   for (const it of items) {
     if (!it.id || !it.name) continue;
-    const icon = it.icon
-      ? (it.icon.startsWith('http') ? it.icon : `https://static.atlasacademy.io/${server}/Items/${it.id}.png`)
+    // icon: basic 포맷은 icon 필드 없을 수 있음 → 정적 URL로 대체
+    const icon = (it.icon && it.icon.startsWith('http'))
+      ? it.icon
       : `https://static.atlasacademy.io/${server}/Items/${it.id}.png`;
     const obj = { id: it.id, name: it.name, icon, isSvt: false };
     const t = it.type || '';
-    if (evtTypes.has(t)) data.evt.push(obj);
+    if (evtTypes.has(t))  data.evt.push(obj);
     else if (etcTypes.has(t)) data.etc.push(obj);
-    else data.mat.push(obj); // 재료: 나머지 전부 (흉골, 증표 등 포함)
+    else data.mat.push(obj);
   }
   loaded._items = true;
 }
@@ -641,7 +647,4 @@ function applyTheme() { document.getElementById('exportArea').className = docume
 function clearAll() { if (rows.length && confirm('전체 삭제?')) { rows=[]; activeRowId=null; rerender(); } }
 function setPool(h) { document.getElementById('pool').innerHTML = h; }
 function setFoot(t) { document.getElementById('lpFoot').textContent = t; }
-function setSb(t) { document.getElementById('sb').textContent = t; }
-
-/* ══ PNG EXPORT ══ */
-async function exportPNG() 
+function setSb(t) { document.getElementById('sb'
