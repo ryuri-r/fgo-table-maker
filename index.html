@@ -383,13 +383,31 @@ async function loadTab(tab) {
   }
 }
 
+async function fetchWithTimeout(url, ms=15000) {
+  const ctrl = new AbortController();
+  const tid = setTimeout(() => ctrl.abort(), ms);
+  try {
+    const r = await fetch(url, { signal: ctrl.signal });
+    const data = await r.json();
+    clearTimeout(tid);
+    return data;
+  } catch(e) {
+    clearTimeout(tid);
+    throw e;
+  }
+}
+
 async function loadAllItems() {
   let items = null;
-  for (const fname of ['nice_item.json']) {
+  for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      const r = await fetch(`https://api.atlasacademy.io/export/${server}/${fname}`);
-      if (r.ok) { items = await r.json(); break; }
-    } catch {}
+      items = await fetchWithTimeout(
+        `https://api.atlasacademy.io/export/${server}/nice_item.json`, 12000
+      );
+      break;
+    } catch(e) {
+      if (attempt === 2) throw new Error(`아이템 로드 실패 (${e.message})`);
+    }
   }
   if (!items) throw new Error('아이템 목록 로드 실패');
 
@@ -641,20 +659,4 @@ function rerender() {
       </div>
       <div class="rlabel">
         ${iconSlot}
-        <textarea id="ltxt-${row.id}" class="ltxt" rows="2"
-          oninput="updateLabel(${row.id},this.value)"
-          onclick="event.stopPropagation()">${row.label}</textarea>
-      </div>
-      <div class="ritems">${itemsH}</div>
-    </div>`;
-  }
-  body.innerHTML = h;
-}
-
-function clearLicon(rowId) {
-  const r = rows.find(r => r.id === rowId);
-  if (r) { r.labelIcon = null; rerender(); }
-}
-
-/* ══ MISC ══ */
-function syncTitle() { document.getElem
+        <textarea id="ltxt-${row.
