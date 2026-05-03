@@ -256,7 +256,6 @@ body{
       <button class="tab active" data-tab="mat" onclick="switchTab('mat')">재료</button>
       <button class="tab" data-tab="svt" onclick="switchTab('svt')">서번트</button>
       <button class="tab" data-tab="evt" onclick="switchTab('evt')">이벤트</button>
-      <button class="tab" data-tab="etc" onclick="switchTab('etc')">기타</button>
     </div>
     <div class="lp-search">
       <input type="text" id="lpSrch" placeholder="이름 검색…" oninput="filterPool()"/>
@@ -306,7 +305,6 @@ body{
       <button class="mtab active" data-mtab="mat" onclick="switchMtab('mat')">재료</button>
       <button class="mtab" data-mtab="svt" onclick="switchMtab('svt')">서번트</button>
       <button class="mtab" data-mtab="evt" onclick="switchMtab('evt')">이벤트</button>
-      <button class="mtab" data-mtab="etc" onclick="switchMtab('etc')">기타</button>
     </div>
     <div class="modal-srch"><input type="text" id="mSrch" placeholder="검색…" oninput="filterModal()"/></div>
     <div class="modal-pool" id="mPool"></div>
@@ -320,7 +318,7 @@ body{
 <script>
 /* ══ STATE ══ */
 let server = 'KR';
-let data = { mat:[], svt:[], evt:[], etc:[] }; // loaded pool data
+let data = { mat:[], svt:[], evt:[] }; // loaded pool data
 let loaded = {};          // which tabs are loaded
 let loading = {};         // 중복 로딩 방지 가드
 let curTab = 'mat';
@@ -337,7 +335,7 @@ window.onload = () => setTimeout(() => switchTab('mat'), 300);
 /* ══ SERVER ══ */
 function changeSrv() {
   server = document.getElementById('gSrv').value;
-  data = { mat:[], svt:[], evt:[], etc:[] };
+  data = { mat:[], svt:[], evt:[] };
   loaded = {};
   loading = {};
   loadTab(curTab);
@@ -368,7 +366,7 @@ async function loadTab(tab) {
   setPool('<div style="padding:12px;color:var(--t2);font-size:11px"><span class="spin"></span> 로딩 중…</div>');
   setFoot('로딩 중…');
   try {
-    if (tab === 'mat' || tab === 'evt' || tab === 'etc') {
+    if (tab === 'mat' || tab === 'evt') {
       if (!loaded._items) await loadAllItems();
     }
     if (tab === 'svt') await loadServants();
@@ -412,9 +410,8 @@ async function loadAllItems() {
   if (!items) throw new Error('아이템 목록 로드 실패');
 
   const evtTypes  = new Set(['eventItem','tdAndEventPoint','eventRewardSet','eventPoint']);
-  const etcTypes  = new Set(['chargeStone','friendPoint','continueItem','questReward']);
 
-  data.mat = []; data.evt = []; data.etc = [];
+  data.mat = []; data.evt = [];
 
   // 이미지 없거나 불필요한 아이템 숨김
   const HIDDEN_IDS = new Set([
@@ -445,7 +442,6 @@ async function loadAllItems() {
     const obj = { id: it.id, name: it.name, icon, isSvt: false };
     const t = it.type || '';
     if (evtTypes.has(t))  data.evt.push(obj);
-    else if (etcTypes.has(t)) data.etc.push(obj);
     else if (it.id >= 94000000) data.evt.push(obj);
       else data.mat.push(obj);
   }
@@ -487,7 +483,7 @@ function renderPool(items, parentId='pool', onClick=null) {
     const cls = it.isSvt ? 'pi svt' : 'pi';
     const fn = onClick ? `${onClick}(${it.id})` : `clickItem(${it.id})`;
     return `<div class="${cls}" onclick="${fn}" title="${it.name}">
-      <img src="${it.icon}" onerror="this.style.opacity='.2'" crossorigin="anonymous"/>
+      <img src="${it.icon}" onerror="this.closest('.pi').remove()" crossorigin="anonymous"/>
       <span class="pn">${it.name}</span>
     </div>`;
   }).join('');
@@ -499,7 +495,7 @@ function renderModal(items) {
   el.innerHTML = items.slice(0,200).map(it => {
     const cls = it.isSvt ? 'pi svt' : 'pi';
     return `<div class="${cls}" onclick="pickLabelIcon(${it.id})" title="${it.name}">
-      <img src="${it.icon}" onerror="this.style.opacity='.2'" crossorigin="anonymous"/>
+      <img src="${it.icon}" onerror="this.closest('.pi').remove()" crossorigin="anonymous"/>
       <span class="pn">${it.name}</span>
     </div>`;
   }).join('');
