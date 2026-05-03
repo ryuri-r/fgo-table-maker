@@ -378,9 +378,12 @@ async function loadTab(tab) {
 }
 
 async function loadAllItems() {
-  // basic 포맷 시도 → 없으면 nice 포맷 폴백
+  // NA: nice_item.json만 존재. JP: nice_item_lang_en.json 우선
   let items = null;
-  for (const fname of ['basic_item_lang_en.json', 'basic_item.json', 'nice_item_lang_en.json']) {
+  const candidates = server === 'JP'
+    ? ['nice_item_lang_en.json', 'nice_item.json']
+    : ['nice_item.json', 'nice_item_lang_en.json'];
+  for (const fname of candidates) {
     try {
       const r = await fetch(`https://api.atlasacademy.io/export/${server}/${fname}`);
       if (r.ok) { items = await r.json(); break; }
@@ -409,8 +412,18 @@ async function loadAllItems() {
 }
 
 async function loadServants() {
-  const r = await fetch(`https://api.atlasacademy.io/export/${server}/basic_svt_lang_en.json`);
-  if (!r.ok) throw new Error(`svt HTTP ${r.status}`);
+  // NA는 basic_svt.json (lang_en 없음), JP는 basic_svt_lang_en.json
+  const candidates = server === 'JP'
+    ? ['basic_svt_lang_en.json', 'basic_svt.json']
+    : ['basic_svt.json', 'basic_svt_lang_en.json'];
+  let r = null;
+  for (const fname of candidates) {
+    try {
+      r = await fetch(`https://api.atlasacademy.io/export/${server}/${fname}`);
+      if (r.ok) break;
+    } catch {}
+  }
+  if (!r || !r.ok) throw new Error(`svt 로드 실패`);
   const svts = await r.json();
   data.svt = svts
     .filter(s => s.collectionNo > 0)   // collectionNo > 0 = 플레이어블 서번트
@@ -643,8 +656,4 @@ function clearLicon(rowId) {
 
 /* ══ MISC ══ */
 function syncTitle() { document.getElementById('exTtl').textContent = document.getElementById('tableTitle').value || 'FGO 드롭 테이블'; }
-function applyTheme() { document.getElementById('exportArea').className = document.getElementById('theme').value; }
-function clearAll() { if (rows.length && confirm('전체 삭제?')) { rows=[]; activeRowId=null; rerender(); } }
-function setPool(h) { document.getElementById('pool').innerHTML = h; }
-function setFoot(t) { document.getElementById('lpFoot').textContent = t; }
-function setSb(t) { document.getElementById('sb'
+function applyTheme() { docume
