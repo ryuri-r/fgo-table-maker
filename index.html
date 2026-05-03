@@ -14,18 +14,18 @@ body{
   font-size:13px;line-height:1.5;
 }
 
-/* ── 색 팔레트: 중성 다크 + 골드 하나 ── */
+/* ── 색 팔레트: 라이트 기본 ── */
 :root{
-  --bg:   #111;
-  --s1:   #1a1a1a;   /* 패널 */
-  --s2:   #222;      /* 카드/입력 */
-  --s3:   #2e2e2e;   /* 호버 */
-  --line: #2a2a2a;   /* 구분선 */
-  --t1:   #e8e8e8;   /* 텍스트 주 */
-  --t2:   #888;      /* 텍스트 보조 */
-  --t3:   #444;      /* 텍스트 흐림 */
-  --acc:  #c8a84b;   /* 골드 액센트 */
-  --acc2: #a08838;   /* 골드 hover */
+  --bg:   #f7f5f0;
+  --s1:   #ffffff;   /* 패널 */
+  --s2:   #f0ede8;   /* 카드/입력 */
+  --s3:   #e8e4de;   /* 호버 */
+  --line: #ddd9d2;   /* 구분선 */
+  --t1:   #1a1814;   /* 텍스트 주 */
+  --t2:   #6b6660;   /* 텍스트 보조 */
+  --t3:   #aaa49e;   /* 텍스트 흐림 */
+  --acc:  #9a7c2e;   /* 골드 액센트 */
+  --acc2: #7a5e1e;   /* 골드 hover */
 }
 
 /* ── 상단바 ── */
@@ -229,6 +229,12 @@ body{
 .spin{display:inline-block;width:13px;height:13px;border:2px solid var(--line);border-top-color:var(--acc);border-radius:50%;animation:sp .6s linear infinite;vertical-align:middle}
 @keyframes sp{to{transform:rotate(360deg)}}
 
+/* 모달 내부도 라이트에 맞게 */
+.modal{background:var(--s1);border:1px solid var(--line);border-radius:8px;width:360px;max-height:520px;display:flex;flex-direction:column;overflow:hidden}
+.modal-top{padding:12px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px}
+.modal-top h3{flex:1;font-size:13px;font-weight:500;color:var(--t1)}
+.modal-srch input{background:var(--s2);color:var(--t1);border:1px solid var(--line)}
+
 .statusbar{padding:4px 14px;background:var(--s1);border-top:1px solid var(--line);font-size:10px;color:var(--t3);flex-shrink:0}
 </style>
 </head>
@@ -265,10 +271,10 @@ body{
       <input class="tbtitle" type="text" id="tableTitle" value="FGO 드롭 테이블" oninput="syncTitle()"/>
       <div class="sep"></div>
       <select class="tb-sel" id="theme" onchange="applyTheme()">
-        <option value="th-dark">다크</option>
+        <option value="th-light">라이트</option>
         <option value="th-warm">웜</option>
         <option value="th-cool">쿨</option>
-        <option value="th-light">라이트</option>
+        <option value="th-dark">다크</option>
       </select>
       <button class="btn" onclick="addRow()">+ 행 추가</button>
       <button class="btn" onclick="clearAll()" style="margin-left:auto;color:var(--t3)">초기화</button>
@@ -276,7 +282,7 @@ body{
     </div>
 
     <div class="cvs-scroll">
-      <div id="exportArea" class="th-dark">
+      <div id="exportArea" class="th-light">
         <div class="ex-hdr"><span class="ex-ttl" id="exTtl">FGO 드롭 테이블</span></div>
         <div class="ex-body" id="exBody">
           <div style="padding:40px;text-align:center;color:#2a3148;font-size:12px">
@@ -638,16 +644,4 @@ function setFoot(t) { document.getElementById('lpFoot').textContent = t; }
 function setSb(t) { document.getElementById('sb').textContent = t; }
 
 /* ══ PNG EXPORT ══ */
-async function exportPNG() {
-  const area = document.getElementById('exportArea');
-  setSb('PNG 생성 중…');
-
-  const nexEls = area.querySelectorAll('[data-nex]');
-  nexEls.forEach(el => el.style.display='none');
-  const selEl = area.querySelector('.sel');
-  if (selEl) selEl.classList.remove('sel');
-
-  try {
-    const imgs = area.querySelectorAll('img');
-    await Promise.allSettled([...imgs].map(async img => {
-      if (!img.src || img.src.startsWith('data:')) return;
+async function exportPNG() 
