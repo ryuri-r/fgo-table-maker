@@ -332,7 +332,7 @@ let rowCnt = 0;
 let modalTargetRowId = null; // which row's label icon we're picking
 
 /* ══ INIT ══ */
-window.onload = () => loadTab('mat');
+window.onload = () => setTimeout(() => switchTab('mat'), 300);
 
 /* ══ SERVER ══ */
 function changeSrv() {
@@ -659,4 +659,4 @@ function rerender() {
       </div>
       <div class="rlabel">
         ${iconSlot}
-        <textarea id="ltxt-${row.
+        
