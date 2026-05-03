@@ -384,28 +384,35 @@ async function loadTab(tab) {
 }
 
 async function fetchWithTimeout(url, ms=15000) {
+  console.log('[FGO] fetch start:', url);
   const ctrl = new AbortController();
-  const tid = setTimeout(() => ctrl.abort(), ms);
+  const tid = setTimeout(() => { console.log('[FGO] fetch ABORT timeout'); ctrl.abort(); }, ms);
   try {
     const r = await fetch(url, { signal: ctrl.signal });
+    console.log('[FGO] fetch headers ok, status:', r.status);
     const data = await r.json();
     clearTimeout(tid);
+    console.log('[FGO] fetch done, items:', data.length);
     return data;
   } catch(e) {
     clearTimeout(tid);
+    console.error('[FGO] fetch error:', e.name, e.message);
     throw e;
   }
 }
 
 async function loadAllItems() {
+  console.log('[FGO] loadAllItems start, server:', server);
   let items = null;
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
+      console.log('[FGO] attempt', attempt);
       items = await fetchWithTimeout(
         `https://api.atlasacademy.io/export/${server}/nice_item.json`, 12000
       );
       break;
     } catch(e) {
+      console.error('[FGO] attempt', attempt, 'failed:', e.message);
       if (attempt === 2) throw new Error(`아이템 로드 실패 (${e.message})`);
     }
   }
@@ -651,12 +658,4 @@ function rerender() {
         ).join('')
       : `<span class="empty-hint">← 클릭해서 추가</span>`;
 
-    h += `<div class="trow ${isSel?'sel':''}" onclick="setActive(${row.id})">
-      <div class="rctrl" data-nex>
-        <button class="rc" onclick="moveRow(${row.id},-1);event.stopPropagation()">↑</button>
-        <button class="rc" onclick="moveRow(${row.id},+1);event.stopPropagation()">↓</button>
-        <button class="rc dl" onclick="removeRow(${row.id});event.stopPropagation()">✕</button>
-      </div>
-      <div class="rlabel">
-        ${iconSlot}
-        
+    h += `<div class="trow $
