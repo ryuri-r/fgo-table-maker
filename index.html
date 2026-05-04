@@ -207,6 +207,27 @@ body{
 .th-cool {--eb:#080e18;--ehb:#0e1826;--rb:#0e1826;--lb:#121e30;--rline:#1e3050;--eline:#1e3050;--icbg:#080e18;--icbd:#1e3050;--acc:#6ea8d4;--ltc:#d0dce8}
 .th-light{--eb:#f5f5f2;--ehb:#eae8e2;--rb:#eae8e2;--lb:#dedad2;--rline:#d0ccc0;--eline:#d0ccc0;--icbg:#f5f5f2;--icbd:#d0ccc0;--acc:#8a6f28;--ltc:#1a1a1a}
 
+/* ── 레이아웃: 클래스별 ── */
+.tpl-class .ex-body{gap:1px;padding:1px}
+.tpl-class .trow{border-radius:0;border-left:none;border-right:none}
+.tpl-class .trow:first-child{border-top:1px solid var(--rline,#2a2a2a)}
+.tpl-class .rlabel{min-width:106px;max-width:106px;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:5px;padding:8px 6px}
+.tpl-class .licon-slot{width:64px;height:64px;border-radius:5px}
+.tpl-class .licon-slot img{width:60px;height:60px}
+.tpl-class .ltxt{text-align:center;font-size:11px}
+.tpl-class .ritems{flex-direction:column;align-items:flex-start;gap:4px;padding:7px 10px}
+.tpl-class .rit-tag-input{background:none;border:none;border-bottom:1px dashed var(--t3,#aaa);color:var(--acc,#c8a84b);font-size:10px;font-weight:700;outline:none;width:180px;padding:0;font-family:inherit;letter-spacing:.02em;cursor:text}
+.tpl-class .rit-icons{display:flex;flex-wrap:wrap;gap:4px}
+
+/* ── 레이아웃: 요일별 ── */
+.tpl-daily .ex-body{gap:2px;padding:4px}
+.tpl-daily .trow.hdr-row{border-color:var(--acc,#c8a84b)}
+.tpl-daily .trow.hdr-row .rlabel{background:var(--acc,#c8a84b);border-right-color:transparent;min-width:0;max-width:none;flex:1;justify-content:center}
+.tpl-daily .trow.hdr-row .licon-slot{display:none}
+.tpl-daily .trow.hdr-row .ltxt{color:#fff;font-weight:700;font-size:12px;text-align:center;letter-spacing:.06em}
+.tpl-daily .trow.hdr-row .ritems{display:none}
+.tpl-daily .trow:not(.hdr-row) .rlabel{min-width:82px;max-width:82px}
+
 /* ── 모달 ── */
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;align-items:center;justify-content:center}
 .modal-bg.open{display:flex}
@@ -272,7 +293,14 @@ body{
         <option value="th-cool">쿨</option>
         <option value="th-dark">다크</option>
       </select>
+      <div class="sep"></div>
+      <select class="tb-sel" id="layout" onchange="applyLayout()">
+        <option value="basic">기본</option>
+        <option value="class">클래스별</option>
+        <option value="daily">요일별</option>
+      </select>
       <button class="btn" onclick="addRow()">+ 행 추가</button>
+      <button class="btn" id="btnHdr" onclick="addHeaderRow()" style="display:none">+ 헤더</button>
       <button class="btn" onclick="clearAll()" style="margin-left:auto;color:var(--t3)">초기화</button>
       <button class="btn save" onclick="exportPNG()">PNG 저장</button>
     </div>
@@ -321,10 +349,11 @@ let loading = {};         // 중복 로딩 방지 가드
 let curTab = 'mat';
 let curMtab = 'mat';
 
-let rows = [];            // {id, label, labelIcon, items:[{id,name,icon,isSvt}]}
+let rows = [];            // {id, label, labelIcon, items:[{id,name,icon,isSvt}], isHeader, tag}
 let activeRowId = null;
 let rowCnt = 0;
 let modalTargetRowId = null; // which row's label icon we're picking
+let curLayout = 'basic'; // 'basic' | 'class' | 'daily'
 
 /* ══ INIT ══ */
 window.onload = () => setTimeout(() => switchTab('mat'), 300);
@@ -574,13 +603,39 @@ function findItem(id) {
 /* ══ ROW MANAGEMENT ══ */
 function addRow() {
   const id = ++rowCnt;
-  rows.push({ id, label: `행 ${id}`, labelIcon: null, items: [] });
+  rows.push({ id, label: `행 ${id}`, labelIcon: null, items: [], isHeader: false, tag: '【解放済み】' });
   activeRowId = id;
   rerender();
   setTimeout(() => {
     const el = document.getElementById(`ltxt-${id}`);
     if (el) { el.focus(); el.select(); }
   }, 40);
+}
+
+function addHeaderRow() {
+  const id = ++rowCnt;
+  rows.push({ id, label: '일요일', labelIcon: null, items: [], isHeader: true, tag: '' });
+  activeRowId = id;
+  rerender();
+  setTimeout(() => {
+    const el = document.getElementById(`ltxt-${id}`);
+    if (el) { el.focus(); el.select(); }
+  }, 40);
+}
+
+function updateTag(id, v) {
+  const r = rows.find(r => r.id === id);
+  if (r) r.tag = v;
+}
+
+function applyLayout() {
+  curLayout = document.getElementById('layout').value;
+  const ea = document.getElementById('exportArea');
+  ea.classList.remove('tpl-class', 'tpl-daily');
+  if (curLayout === 'class') ea.classList.add('tpl-class');
+  else if (curLayout === 'daily') ea.classList.add('tpl-daily');
+  document.getElementById('btnHdr').style.display = (curLayout === 'daily') ? '' : 'none';
+  rerender();
 }
 
 function removeRow(id) {
@@ -674,52 +729,86 @@ function rerender() {
     return;
   }
 
+  const mkCtrl = id => `<div class="rctrl" data-nex>
+    <button class="rc" onclick="moveRow(${id},-1);event.stopPropagation()">↑</button>
+    <button class="rc" onclick="moveRow(${id},+1);event.stopPropagation()">↓</button>
+    <button class="rc dl" onclick="removeRow(${id});event.stopPropagation()">✕</button>
+  </div>`;
+
+  const mkIconSlot = row => row.labelIcon
+    ? `<div class="licon-slot ${row.labelIcon.isSvt?'svt':''}" onclick="openIconModal(${row.id});event.stopPropagation()">
+         <img src="${row.labelIcon.icon}" onerror="this.style.opacity='.3'" crossorigin="anonymous"/>
+         <span class="ldel" onclick="clearLicon(${row.id});event.stopPropagation()">✕</span>
+       </div>`
+    : `<div class="licon-slot" onclick="openIconModal(${row.id});event.stopPropagation()" title="아이콘 추가">+</div>`;
+
+  const mkRics = (row) => row.items.map((it,idx) =>
+    `<div class="ric ${it.isSvt?'svt':''}"
+      draggable="true"
+      ondragstart="dStart(event,${row.id},${idx})"
+      ondragover="dOver(event,${row.id},${idx})"
+      ondragleave="dLeave(event)"
+      ondrop="dDrop(event,${row.id},${idx})"
+      title="${it.name}">
+      <img src="${it.icon}" onerror="this.style.opacity='.2'" crossorigin="anonymous"/>
+      <div class="rdel" onclick="removeItem(${row.id},${idx});event.stopPropagation()">✕</div>
+    </div>`
+  ).join('');
+
   let h = '';
   for (const row of rows) {
     const isSel = row.id === activeRowId;
+    const ctrl = mkCtrl(row.id);
+    const iconSlot = mkIconSlot(row);
+    const ricsH = row.items.length ? mkRics(row) : `<span class="empty-hint">← 클릭해서 추가</span>`;
 
-    /* label icon slot */
-    const iconSlot = row.labelIcon
-      ? `<div class="licon-slot ${row.labelIcon.isSvt?'svt':''}" onclick="openIconModal(${row.id});event.stopPropagation()">
-           <img src="${row.labelIcon.icon}" onerror="this.style.opacity='.3'" crossorigin="anonymous"/>
-           <span class="ldel" onclick="clearLicon(${row.id});event.stopPropagation()">✕</span>
-         </div>`
-      : `<div class="licon-slot" onclick="openIconModal(${row.id});event.stopPropagation()" title="아이콘 추가">+</div>`;
+    /* ── 헤더 행 (요일별 구분자) ── */
+    if (row.isHeader) {
+      h += `<div class="trow hdr-row ${isSel?'sel':''}" onclick="setActive(${row.id})">
+        ${ctrl}
+        <div class="rlabel">
+          <textarea id="ltxt-${row.id}" class="ltxt" rows="1"
+            oninput="updateLabel(${row.id},this.value)"
+            onclick="event.stopPropagation()">${row.label}</textarea>
+        </div>
+        <div class="ritems"></div>
+      </div>`;
+      continue;
+    }
 
-    /* items */
-    const itemsH = row.items.length
-      ? row.items.map((it,idx) =>
-          `<div class="ric ${it.isSvt?'svt':''}"
-            draggable="true"
-            ondragstart="dStart(event,${row.id},${idx})"
-            ondragover="dOver(event,${row.id},${idx})"
-            ondragleave="dLeave(event)"
-            ondrop="dDrop(event,${row.id},${idx})"
-            title="${it.name}">
-            <img src="${it.icon}" onerror="this.style.opacity='.2'" crossorigin="anonymous"/>
-            <div class="rdel" onclick="removeItem(${row.id},${idx});event.stopPropagation()">✕</div>
-          </div>`
-        ).join('')
-      : `<span class="empty-hint">← 클릭해서 추가</span>`;
-
-    h += `<div class="trow ${isSel?'sel':''}" onclick="setActive(${row.id})">
-      <div class="rctrl" data-nex>
-        <button class="rc" onclick="moveRow(${row.id},-1);event.stopPropagation()">↑</button>
-        <button class="rc" onclick="moveRow(${row.id},+1);event.stopPropagation()">↓</button>
-        <button class="rc dl" onclick="removeRow(${row.id});event.stopPropagation()">✕</button>
-      </div>
-      <div class="rlabel">
-        ${iconSlot}
-        <textarea id="ltxt-${row.id}" class="ltxt" rows="2"
-          oninput="updateLabel(${row.id},this.value)"
-          onclick="event.stopPropagation()">${row.label}</textarea>
-      </div>
-      <div class="ritems">${itemsH}</div>
-    </div>`;
+    /* ── 클래스별 레이아웃 ── */
+    if (curLayout === 'class') {
+      h += `<div class="trow ${isSel?'sel':''}" onclick="setActive(${row.id})">
+        ${ctrl}
+        <div class="rlabel">
+          ${iconSlot}
+          <textarea id="ltxt-${row.id}" class="ltxt" rows="2"
+            oninput="updateLabel(${row.id},this.value)"
+            onclick="event.stopPropagation()">${row.label}</textarea>
+        </div>
+        <div class="ritems">
+          <input class="rit-tag-input" value="${row.tag||''}"
+            oninput="updateTag(${row.id},this.value)"
+            onclick="event.stopPropagation()"/>
+          <div class="rit-icons">${ricsH}</div>
+        </div>
+      </div>`;
+    } else {
+      /* ── 기본 / 요일별 일반 행 ── */
+      h += `<div class="trow ${isSel?'sel':''}" onclick="setActive(${row.id})">
+        ${ctrl}
+        <div class="rlabel">
+          ${iconSlot}
+          <textarea id="ltxt-${row.id}" class="ltxt" rows="2"
+            oninput="updateLabel(${row.id},this.value)"
+            onclick="event.stopPropagation()">${row.label}</textarea>
+        </div>
+        <div class="ritems">${ricsH}</div>
+      </div>`;
+    }
   }
   body.innerHTML = h;
 }
-
 function clearLicon(rowId) {
   const r = rows.find(r => r.id === rowId);
   if (r) { r.labelIcon = null; rerender(); }
@@ -776,9 +865,9 @@ async function exportPNG() {
 Object.assign(window, {
   changeSrv, switchTab, switchMtab,
   filterPool, filterModal,
-  clickItem, addRow, removeRow, moveRow, setActive, updateLabel, removeItem,
+  clickItem, addRow, addHeaderRow, removeRow, moveRow, setActive, updateLabel, removeItem,
   openIconModal, closeModal, pickLabelIcon, clearLabelIcon, clearLicon,
-  syncTitle, applyTheme, clearAll, exportPNG,
+  syncTitle, applyTheme, applyLayout, updateTag, clearAll, exportPNG,
   dStart, dOver, dLeave, dDrop,
 });
 </script>
