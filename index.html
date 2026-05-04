@@ -69,7 +69,7 @@ body{
 }
 .lp-search input:focus{border-color:var(--acc)}
 
-.pool{flex:1;overflow-y:auto;padding:8px;display:flex;flew-wrap:wrap;gap:5px;align-content:flex-start}
+.pool{flex:1;overflow-y:auto;padding:8px;display:flex;flex-wrap:wrap;gap:5px;align-content:flex-start}
 .pool::-webkit-scrollbar{width:3px}
 .pool::-webkit-scrollbar-thumb{background:var(--line);border-radius:2px}
 
@@ -334,10 +334,10 @@ body{
         <button class="ftab" data-class="lancer" onclick="setClassFilter('lancer')">랜서</button>
         <button class="ftab" data-class="rider" onclick="setClassFilter('rider')">라이더</button>
         <button class="ftab" data-class="caster" onclick="setClassFilter('caster')">캐스터</button>
-        <button class="ftab" data-class="assassin" onclick="setClassFilter('assassin')">어쌔씬</button>
+        <button class="ftab" data-class="assassin" onclick="setClassFilter('assassin')">어새신</button>
         <button class="ftab" data-class="berserker" onclick="setClassFilter('berserker')">버서커</button>
         <button class="ftab" data-class="ruler" onclick="setClassFilter('ruler')">룰러</button>
-        <button class="ftab" data-class="avenger" onclick="setClassFilter('avenger')">어벤져</button>
+        <button class="ftab" data-class="avenger" onclick="setClassFilter('avenger')">어벤저</button>
         <button class="ftab" data-class="moonCancer" onclick="setClassFilter('moonCancer')">문캔서</button>
         <button class="ftab" data-class="alterEgo" onclick="setClassFilter('alterEgo')">얼터에고</button>
         <button class="ftab" data-class="foreigner" onclick="setClassFilter('foreigner')">포리너</button>
@@ -426,7 +426,7 @@ let svtClassFilter = ''; // ''=전체
 /* ══ INIT ══ */
 window.onload = () => setTimeout(() => { switchTab('mat'); applyLayout(); initResize(); }, 300);
 
-/* ═╀�SERVER ══ */
+/* ══ SERVER ══ */
 function changeSrv() {
   server = document.getElementById('gSrv').value;
   data = { mat:[], svt:[], evt:[] };
@@ -454,7 +454,7 @@ function switchMtab(tab) {
   else renderModal(data[tab]);
 }
 
-/* ═╀ LOAD DATA ══ */
+/* ══ LOAD DATA ══ */
 async function loadTab(tab) {
   if (loaded[tab]) { renderPool(data[tab]); return; }
   if (loading[tab]) return;
@@ -568,7 +568,7 @@ async function loadAllItems() {
     if (t === 'skillLvUp' && id >= 6001 && id <= 6007) return [2, 0, id];
     if (t === 'skillLvUp' && id >= 6101 && id <= 6107) return [3, 0, id];
     if (t === 'skillLvUp' && id >= 6201 && id <= 6207) return [4, 0, id];
-    // 별빛의모래·토치
+    // 별빛모래·토치
     if (id >= 50 && id <= 53) return [5, 0, id];
     // 사과
     if (t === 'apRecover' || t === 'apAdd') return [6, 0, p];
@@ -732,7 +732,7 @@ function applyLayout() {
   ea.classList.remove('tpl-class', 'tpl-daily');
   if (curLayout === 'class') ea.classList.add('tpl-class');
   else ea.classList.add('tpl-daily');
-  // 레이아웃 전환 시 --rlw 초기화 (각 레이아웃 CSS 기본값으로 복귀)
+  // 레이아웃 전환 시 --rlw 초기화 (각 레이아웃 CSS 기본값으로 복구)
   ea.style.removeProperty('--rlw');
   document.getElementById('btnHdr').style.display = (curLayout === 'daily') ? '' : 'none';
   rerender();
@@ -960,4 +960,133 @@ function rerender() {
   for (const row of rows) {
     const isSel = row.id === activeRowId;
     const ctrl = mkCtrl(row.id);
-    const iconSl
+    const iconSlot = mkIconSlot(row);
+    const ricsH = row.items.length ? mkRics(row) : `<span class="empty-hint">← 클릭해서 추가</span>`;
+
+    /* ── 헤더 행 (표1 구분자) ── */
+    if (row.isHeader) {
+      h += `<div class="trow hdr-row ${isSel?'sel':''}" onclick="setActive(${row.id})">
+        ${ctrl}
+        <div class="rlabel">
+          <textarea id="ltxt-${row.id}" class="ltxt" rows="1"
+            oninput="updateLabel(${row.id},this.value)"
+            onclick="event.stopPropagation()">${row.label}</textarea>
+        </div>
+        <div class="ritems"></div>
+      </div>`;
+      continue;
+    }
+
+    /* ── 표2 (클래스별) ── */
+    if (curLayout === 'class') {
+      h += `<div class="trow ${isSel?'sel':''}" onclick="setActive(${row.id})">
+        ${ctrl}
+        <div class="rlabel">
+          ${iconSlot}
+          <textarea id="ltxt-${row.id}" class="ltxt" rows="2"
+            oninput="updateLabel(${row.id},this.value)"
+            onclick="event.stopPropagation()">${row.label}</textarea>
+          ${rlRsz}
+        </div>
+        <div class="ritems">
+          <input class="rit-tag-input" placeholder="소제목" value="${row.tag||''}"
+            oninput="updateTag(${row.id},this.value)"
+            onclick="event.stopPropagation()"/>
+          <div class="rit-icons">${ricsH}</div>
+        </div>
+      </div>`;
+    } else {
+      /* ── 표1 (요일별) 일반 행 ── */
+      h += `<div class="trow ${isSel?'sel':''}" onclick="setActive(${row.id})">
+        ${ctrl}
+        <div class="rlabel">
+          ${iconSlot}
+          <textarea id="ltxt-${row.id}" class="ltxt" rows="2"
+            oninput="updateLabel(${row.id},this.value)"
+            onclick="event.stopPropagation()">${row.label}</textarea>
+          ${rlRsz}
+        </div>
+        <div class="ritems"
+          ondragover="dOverEnd(event,${row.id})"
+          ondragleave="dLeaveEnd(event)"
+          ondrop="dDropEnd(event,${row.id})">${ricsH}</div>
+      </div>`;
+    }
+  }
+  body.innerHTML = h;
+}
+
+function clearLicon(rowId) {
+  const r = rows.find(r => r.id === rowId);
+  if (r) { r.labelIcon = null; rerender(); }
+}
+
+/* ══ MISC ══ */
+function syncTitle() { document.getElementById('exTtl').textContent = document.getElementById('tableTitle').value || '드롭 테이블'; }
+function applyTheme() {
+  const ea = document.getElementById('exportArea');
+  const curRlw = ea.style.getPropertyValue('--rlw');
+  const curMh = ea.style.minHeight;
+  ea.className = document.getElementById('theme').value;
+  // 테마 변경 후 CSS var/minHeight 복원
+  if (curRlw) ea.style.setProperty('--rlw', curRlw);
+  if (curMh) ea.style.minHeight = curMh;
+  applyLayout();
+}
+function clearAll() { if (rows.length && confirm('전체 삭제?')) { rows=[]; activeRowId=null; rerender(); } }
+function setPool(h) { document.getElementById('pool').innerHTML = h; }
+function setFoot(t) { document.getElementById('lpFoot').textContent = t; }
+function setSb(t) { document.getElementById('sb').textContent = t; }
+
+/* ══ PNG EXPORT ══ */
+async function exportPNG() {
+  const area = document.getElementById('exportArea');
+  setSb('PNG 생성 중…');
+
+  const nexEls = area.querySelectorAll('[data-nex]');
+  nexEls.forEach(el => el.style.display='none');
+  const selEl = area.querySelector('.sel');
+  if (selEl) selEl.classList.remove('sel');
+
+  try {
+    const imgs = area.querySelectorAll('img');
+    await Promise.allSettled([...imgs].map(async img => {
+      if (!img.src || img.src.startsWith('data:')) return;
+      try {
+        const r = await fetch(img.src, {mode:'cors'});
+        const blob = await r.blob();
+        img.src = await new Promise((res,rej) => {
+          const fr = new FileReader();
+          fr.onload = ()=>res(fr.result); fr.onerror=rej;
+          fr.readAsDataURL(blob);
+        });
+      } catch {}
+    }));
+
+    const canvas = await html2canvas(area, { backgroundColor:null, scale:2, useCORS:true, allowTaint:false, logging:false });
+    const link = document.createElement('a');
+    const fname = (document.getElementById('tableTitle').value||'드롭_테이블').replace(/[^\w가-힣\s]/g,'').trim().replace(/\s+/g,'_')||'fgo_table';
+    link.download = fname+'.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    setSb('PNG 저장 완료 ✓');
+  } catch(e) { setSb('오류: '+e.message); }
+  finally {
+    nexEls.forEach(el => el.style.display='');
+    if (selEl) selEl.classList.add('sel');
+  }
+}
+
+/* ══ 전역 등록 ══ */
+Object.assign(window, {
+  changeSrv, switchTab, switchMtab,
+  filterPool, filterModal,
+  clickItem, addRow, addHeaderRow, removeRow, moveRow, setActive, updateLabel, removeItem,
+  openIconModal, closeModal, pickLabelIcon, clearLabelIcon, clearLicon,
+  syncTitle, applyTheme, applyLayout, updateTag, clearAll, exportPNG,
+  dStart, dOver, dLeave, dDrop, dOverEnd, dLeaveEnd, dDropEnd, rszLabel,
+  setRarityFilter, setClassFilter, applySvtFilter,
+});
+</script>
+</body>
+</html>
