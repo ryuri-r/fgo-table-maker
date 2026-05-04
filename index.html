@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8"/>
-<title>FGO Table Maker</title>
+<title>드롭 테이블 메이커</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 /* ── 리셋 & 기본 ── */
@@ -285,7 +285,7 @@ body{
   <!-- ══ RIGHT PANEL ══ -->
   <div class="right">
     <div class="toolbar">
-      <input class="tbtitle" type="text" id="tableTitle" value="FGO 드롭 테이블" oninput="syncTitle()"/>
+      <input class="tbtitle" type="text" id="tableTitle" value="드롭 테이블" oninput="syncTitle()"/>
       <div class="sep"></div>
       <select class="tb-sel" id="theme" onchange="applyTheme()">
         <option value="th-light">라이트</option>
@@ -295,9 +295,8 @@ body{
       </select>
       <div class="sep"></div>
       <select class="tb-sel" id="layout" onchange="applyLayout()">
-        <option value="basic">기본</option>
-        <option value="class">클래스별</option>
-        <option value="daily">요일별</option>
+        <option value="daily">표1</option>
+        <option value="class">표2</option>
       </select>
       <button class="btn" onclick="addRow()">+ 행 추가</button>
       <button class="btn" id="btnHdr" onclick="addHeaderRow()" style="display:none">+ 헤더</button>
@@ -307,7 +306,7 @@ body{
 
     <div class="cvs-scroll">
       <div id="exportArea" class="th-light">
-        <div class="ex-hdr"><span class="ex-ttl" id="exTtl">FGO 드롭 테이블</span></div>
+        <div class="ex-hdr"><span class="ex-ttl" id="exTtl">드롭 테이블</span></div>
         <div class="ex-body" id="exBody">
           <div style="padding:40px;text-align:center;color:#2a3148;font-size:12px">
             [+ 행 추가] 후 왼쪽에서 아이콘 클릭
@@ -353,10 +352,10 @@ let rows = [];            // {id, label, labelIcon, items:[{id,name,icon,isSvt}]
 let activeRowId = null;
 let rowCnt = 0;
 let modalTargetRowId = null; // which row's label icon we're picking
-let curLayout = 'basic'; // 'basic' | 'class' | 'daily'
+let curLayout = 'daily'; // 'class' | 'daily'
 
 /* ══ INIT ══ */
-window.onload = () => setTimeout(() => switchTab('mat'), 300);
+window.onload = () => setTimeout(() => { switchTab('mat'); applyLayout(); }, 300);
 
 /* ══ SERVER ══ */
 function changeSrv() {
@@ -603,7 +602,7 @@ function findItem(id) {
 /* ══ ROW MANAGEMENT ══ */
 function addRow() {
   const id = ++rowCnt;
-  rows.push({ id, label: `행 ${id}`, labelIcon: null, items: [], isHeader: false, tag: '【解放済み】' });
+  rows.push({ id, label: `행 ${id}`, labelIcon: null, items: [], isHeader: false, tag: '' });
   activeRowId = id;
   rerender();
   setTimeout(() => {
@@ -633,7 +632,7 @@ function applyLayout() {
   const ea = document.getElementById('exportArea');
   ea.classList.remove('tpl-class', 'tpl-daily');
   if (curLayout === 'class') ea.classList.add('tpl-class');
-  else if (curLayout === 'daily') ea.classList.add('tpl-daily');
+  else ea.classList.add('tpl-daily');
   document.getElementById('btnHdr').style.display = (curLayout === 'daily') ? '' : 'none';
   rerender();
 }
@@ -787,14 +786,14 @@ function rerender() {
             onclick="event.stopPropagation()">${row.label}</textarea>
         </div>
         <div class="ritems">
-          <input class="rit-tag-input" value="${row.tag||''}"
+          <input class="rit-tag-input" placeholder="소제목" value="${row.tag||''}"
             oninput="updateTag(${row.id},this.value)"
             onclick="event.stopPropagation()"/>
           <div class="rit-icons">${ricsH}</div>
         </div>
       </div>`;
     } else {
-      /* ── 기본 / 요일별 일반 행 ── */
+      /* ── 표1 (요일별) 일반 행 ── */
       h += `<div class="trow ${isSel?'sel':''}" onclick="setActive(${row.id})">
         ${ctrl}
         <div class="rlabel">
