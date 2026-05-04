@@ -333,6 +333,31 @@ body{
 .ftab:hover{background:var(--s3);color:var(--t1)}
 .ftab.active{background:var(--acc);color:#fff;border-color:var(--acc)}
 .ric-hover{border-color:var(--acc,#c8a84b)!important}
+
+/* no-icon 시 글자 세로 중앙 */
+.rlabel.no-icon .ltxt-wrap{align-self:stretch;display:flex;align-items:center}
+.rlabel.no-icon .ltxt{height:auto;min-height:0}
+
+/* 모바일 반응형 */
+@media(max-width:768px){
+  .topbar{padding:8px 10px}
+  .wrap{flex-direction:column}
+  .left{width:100%!important;height:auto;max-height:180px;border-right:none;border-bottom:1px solid var(--line);flex-shrink:0}
+  .pool{flex-direction:row;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;padding:6px;align-content:center;scrollbar-width:thin}
+  .pi{min-width:56px;flex-shrink:0}
+  .pi img{width:38px;height:38px}
+  .right{flex:1;min-height:0;overflow:hidden}
+  .toolbar{flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;padding:6px 10px;gap:5px;scrollbar-width:none}
+  .toolbar::-webkit-scrollbar{display:none}
+  .btn{padding:4px 9px;font-size:11px;white-space:nowrap;flex-shrink:0}
+  .tbtitle{width:120px;font-size:11px;flex-shrink:0}
+  .tb-sel{font-size:11px;flex-shrink:0}
+  .cvs-scroll{padding:10px 8px}
+  #exportArea{min-width:0;max-width:100%}
+  .tpl-daily .trow:not(.hdr-row) .rlabel{width:var(--rlw,72px)}
+  .modal{width:95vw;max-height:80vh}
+  #bottomBar{font-size:10px;padding:3px 8px}
+}
 </style>
 </head>
 <body>
@@ -606,11 +631,11 @@ async function loadAllItems() {
     if (t === 'tdLvUp' && id >= 7100 && id <= 7107) return [0, 2, p];
     // 전승결정
     if (id === 6999) return [1, 0, 0];
-    // 휘석·마석·비석
+    // 휘석�마석�비석
     if (t === 'skillLvUp' && id >= 6001 && id <= 6007) return [2, 0, id];
     if (t === 'skillLvUp' && id >= 6101 && id <= 6107) return [3, 0, id];
     if (t === 'skillLvUp' && id >= 6201 && id <= 6207) return [4, 0, id];
-    // 별빛의모래·토치
+    // 별빛의모래�토치
     if (id >= 50 && id <= 53) return [5, 0, id];
     // 사과
     if (t === 'apRecover' || t === 'apAdd') return [6, 0, p];
@@ -624,7 +649,7 @@ async function loadAllItems() {
     if (t === 'stoneFragments') return [10, 0, 0];
     // 프렌즈포인트
     if (t === 'friendPoint') return [11, 0, 0];
-    // 성배의물방울·성배
+    // 성배의물방울�성배
     if (id === 7998) return [12, 0, 0];
     if (id === 7999) return [13, 0, 0];
     return [99, 0, p];
@@ -1043,9 +1068,9 @@ function rerender() {
     const isSel = row.id === activeRowId;
     const ctrl = mkCtrl(row.id);
     const iconSlot = mkIconSlot(row);
-    const ricsH = row.items.length ? mkRics(row) : `<span class="empty-hint">â í´ë¦­í´ì ì¶ê°</span>`;
+    const ricsH = row.items.length ? mkRics(row) : `<span class="empty-hint">← 클릭해서 추가</span>`;
 
-    /* ââ í¤ë í (í1 êµ¬ë¶ì) ââ */
+    /* ── 헤더 행 (표1 구분자) ── */
     if (row.isHeader) {
       h += `<div class="trow hdr-row ${isSel?'sel':''}" onclick="setActive(${row.id})">
         ${ctrl}
@@ -1059,7 +1084,7 @@ function rerender() {
       continue;
     }
 
-    /* ââ í2 (í´ëì¤ë³) ââ */
+    /* ── 표2 (클래스별) ── */
     if (curLayout === 'class') {
       h += `<div class="trow ${isSel?'sel':''}" onclick="setActive(${row.id})">
         ${ctrl}
@@ -1071,14 +1096,14 @@ function rerender() {
           ${rlRsz}
         </div>
         <div class="ritems">
-          <input class="rit-tag-input" placeholder="ìì ëª©" value="${row.tag||''}"
+          <input class="rit-tag-input" placeholder="소제목" value="${row.tag||''}"
             oninput="updateTag(${row.id},this.value)"
             onclick="event.stopPropagation()"/>
           <div class="rit-icons">${ricsH}</div>
         </div>
       </div>`;
     } else {
-      /* ââ í1 (ìì¼ë³) ì¼ë° í ââ */
+      /* ── 표1 (요일별) 일반 행 ── */
       h += `<div class="trow ${isSel?'sel':''}" onclick="setActive(${row.id})">
         ${ctrl}
         <div class="${rlCls(row)}">
@@ -1100,29 +1125,29 @@ function clearLicon(rowId) {
   if (r) { r.labelIcon = null; rerender(); }
 }
 
-/* ââ MISC ââ */
-function syncTitle() { document.getElementById('exTtl').textContent = document.getElementById('tableTitle').value || 'ëë¡­ íì´ë¸'; }
+/* ══ MISC ══ */
+function syncTitle() { document.getElementById('exTtl').textContent = document.getElementById('tableTitle').value || '드롭 테이블'; }
 function applyTheme() {
   const ea = document.getElementById('exportArea');
   const curRlw = ea.style.getPropertyValue('--rlw');
   const curMh = ea.style.minHeight;
   const curW = ea.style.width;
   ea.className = document.getElementById('theme').value;
-  // íë§ ë³ê²½ í CSS var/minHeight ë³µì
+  // 테마 변경 후 CSS var/minHeight 복원
   if (curRlw) ea.style.setProperty('--rlw', curRlw);
   if (curMh) ea.style.minHeight = curMh;
   if (curW) ea.style.width = curW;
   applyLayout();
 }
-function clearAll() { if (rows.length && confirm('ì ì²´ ì­ì ?')) { rows=[]; activeRowId=null; rerender(); } }
+function clearAll() { if (rows.length && confirm('전체 삭제?')) { rows=[]; activeRowId=null; rerender(); } }
 function setPool(h) { document.getElementById('pool').innerHTML = h; }
 function setFoot(t) { document.getElementById('lpFoot').textContent = t; }
 function setSb(t) { document.getElementById('sb').textContent = t; }
 
-/* ââ PNG EXPORT ââ */
+/* ══ PNG EXPORT ══ */
 async function exportPNG() {
   const area = document.getElementById('exportArea');
-  setSb('PNG ìì± ì¤â¦');
+  setSb('PNG 생성 중…');
 
   const nexEls = area.querySelectorAll('[data-nex]');
   nexEls.forEach(el => el.style.display='none');
@@ -1146,19 +1171,19 @@ async function exportPNG() {
 
     const canvas = await html2canvas(area, { backgroundColor:null, scale:2, useCORS:true, allowTaint:false, logging:false });
     const link = document.createElement('a');
-    const fname = (document.getElementById('tableTitle').value||'ëë¡­_íì´ë¸').replace(/[^\wê°-í£\s]/g,'').trim().replace(/\s+/g,'_')||'fgo_table';
+    const fname = (document.getElementById('tableTitle').value||'드롭_테이블').replace(/[^\w가-힣\s]/g,'').trim().replace(/\s+/g,'_')||'fgo_table';
     link.download = fname+'.png';
     link.href = canvas.toDataURL('image/png');
     link.click();
-    setSb('PNG ì ì¥ ìë£ â');
-  } catch(e) { setSb('ì¤ë¥: '+e.message); }
+    setSb('PNG 저장 완료 ✓');
+  } catch(e) { setSb('오류: '+e.message); }
   finally {
     nexEls.forEach(el => el.style.display='');
     if (selEl) selEl.classList.add('sel');
   }
 }
 
-/* ââ ì ì­ ë±ë¡ ââ */
+/* ══ 전역 등록 ══ */
 Object.assign(window, {
   changeSrv, switchTab, switchMtab,
   filterPool, filterModal,
