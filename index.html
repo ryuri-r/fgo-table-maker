@@ -2,10 +2,10 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8"/>
-<title>드롭 테이블 메이커</title>
+<title>ëë¡­ íì´ë¸ ë©ì´ì»¤</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
-/* ── 리셋 & 기본 ── */
+/* ââ ë¦¬ì & ê¸°ë³¸ ââ */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{
   background:#111;color:#e8e8e8;
@@ -14,21 +14,21 @@ body{
   font-size:13px;line-height:1.5;
 }
 
-/* ── 색 팔레트: 라이트 기본 ── */
+/* ââ ì íë í¸: ë¼ì´í¸ ê¸°ë³¸ ââ */
 :root{
   --bg:   #f7f5f0;
-  --s1:   #ffffff;   /* 패널 */
-  --s2:   #f0ede8;   /* 카드/입력 */
-  --s3:   #e8e4de;   /* 호버 */
-  --line: #ddd9d2;   /* 구분선 */
-  --t1:   #1a1814;   /* 텍스트 주 */
-  --t2:   #6b6660;   /* 텍스트 보조 */
-  --t3:   #aaa49e;   /* 텍스트 흐림 */
-  --acc:  #9a7c2e;   /* 골드 액센트 */
-  --acc2: #7a5e1e;   /* 골드 hover */
+  --s1:   #ffffff;
+  --s2:   #f0ede8;
+  --s3:   #e8e4de;
+  --line: #ddd9d2;
+  --t1:   #1a1814;
+  --t2:   #6b6660;
+  --t3:   #aaa49e;
+  --acc:  #9a7c2e;
+  --acc2: #7a5e1e;
 }
 
-/* ── 상단바 ── */
+/* ââ ìë¨ë° ââ */
 .topbar{
   background:var(--s1);border-bottom:1px solid var(--line);
   padding:10px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0;
@@ -37,11 +37,20 @@ body{
 .topbar h1 span{color:var(--acc)}
 .topbar .hint{font-size:11px;color:var(--t3)}
 
-/* ── 레이아웃 ── */
+/* ââ ë ì´ìì ââ */
 .wrap{display:flex;flex:1;overflow:hidden}
 
-/* ══ LEFT PANEL ══ */
-.left{width:256px;border-right:1px solid var(--line);background:var(--s1);display:flex;flex-direction:column;flex-shrink:0}
+/* ââ LEFT PANEL ââ */
+.left{
+  width:256px;border-right:1px solid var(--line);background:var(--s1);
+  display:flex;flex-direction:column;flex-shrink:0;position:relative;
+}
+/* ì¢ì¸¡ í¨ë ë¦¬ì¬ì´ì¦ í¸ë¤ */
+.left-rsz{
+  position:absolute;right:-3px;top:0;bottom:0;width:6px;
+  cursor:col-resize;z-index:20;user-select:none;
+}
+.left-rsz:hover,.left-rsz.dragging{background:rgba(155,125,50,.35)}
 
 .tabs{display:flex;border-bottom:1px solid var(--line);flex-shrink:0}
 .tab{
@@ -59,16 +68,12 @@ body{
   padding:6px 9px;font-size:12px;outline:none;transition:border-color .12s;
 }
 .lp-search input:focus{border-color:var(--acc)}
-.srv-sel{
-  background:var(--bg);color:var(--t2);border:1px solid var(--line);
-  border-radius:4px;padding:5px 7px;font-size:11px;cursor:pointer;
-}
 
 .pool{flex:1;overflow-y:auto;padding:8px;display:flex;flex-wrap:wrap;gap:5px;align-content:flex-start}
 .pool::-webkit-scrollbar{width:3px}
 .pool::-webkit-scrollbar-thumb{background:var(--line);border-radius:2px}
 
-/* 풀 아이템 */
+/* í ìì´í */
 .pi{
   width:52px;display:flex;flex-direction:column;align-items:center;gap:3px;
   cursor:pointer;border-radius:5px;padding:5px 3px;
@@ -76,11 +81,12 @@ body{
 }
 .pi:hover{background:var(--s3);border-color:var(--acc)}
 .pi img{width:42px;height:42px;object-fit:contain;border-radius:3px}
-.pi.svt img{border-radius:4px}.pi .pn{font-size:8px;color:var(--t3);text-align:center;max-width:50px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.pi.svt img{border-radius:4px}
+.pi .pn{font-size:8px;color:var(--t3);text-align:center;max-width:50px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 
 .lp-foot{padding:5px 9px;border-top:1px solid var(--line);font-size:10px;color:var(--t3);flex-shrink:0}
 
-/* ══ RIGHT PANEL ══ */
+/* ââ RIGHT PANEL ââ */
 .right{flex:1;display:flex;flex-direction:column;overflow:hidden}
 
 .toolbar{
@@ -88,7 +94,6 @@ body{
   padding:8px 14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex-shrink:0;
 }
 
-/* 버튼 — 한 가지 스타일만 */
 .btn{
   background:var(--s2);color:var(--t1);
   border:1px solid var(--line);border-radius:4px;
@@ -96,7 +101,6 @@ body{
   white-space:nowrap;transition:background .1s,border-color .1s;
 }
 .btn:hover{background:var(--s3);border-color:var(--t3)}
-/* 저장 버튼만 골드 강조 */
 .btn.save{border-color:var(--acc);color:var(--acc)}
 .btn.save:hover{background:var(--acc);color:#111}
 
@@ -113,10 +117,17 @@ body{
 }
 .sep{width:1px;height:16px;background:var(--line);flex-shrink:0;margin:0 2px}
 
-/* ── 캔버스 영역 ── */
-.cvs-scroll{flex:1;overflow:auto;padding:24px;background:var(--bg)}
+/* ââ ìºë²ì¤ ìì­ ââ */
+.cvs-scroll{flex:1;overflow:auto;padding:24px 24px 8px;background:var(--bg)}
 
-/* ── 익스포트 영역 ── */
+/* ìµì¤í¬í¸ ìì­ ëì´ ë¦¬ì¬ì´ì¦ í¸ë¤ */
+#eaResizer{
+  width:100%;height:6px;cursor:row-resize;user-select:none;
+  margin-top:3px;border-radius:3px;transition:background .12s;
+}
+#eaResizer:hover,#eaResizer.dragging{background:rgba(155,125,50,.35)}
+
+/* ââ ìµì¤í¬í¸ ìì­ ââ */
 #exportArea{
   display:inline-block;min-width:360px;
   border-radius:8px;overflow:hidden;
@@ -131,7 +142,7 @@ body{
 .ex-ttl{font-size:13px;font-weight:600;color:var(--acc,#c8a84b);letter-spacing:.03em}
 .ex-body{padding:8px;display:flex;flex-direction:column;gap:3px}
 
-/* ── 테이블 행 ── */
+/* ââ íì´ë¸ í ââ */
 .trow{
   display:flex;align-items:stretch;
   border-radius:5px;overflow:visible;
@@ -140,7 +151,7 @@ body{
 }
 .trow.sel{border-color:var(--acc,#c8a84b)}
 
-/* 행 컨트롤 */
+/* í ì»¨í¸ë¡¤ */
 .rctrl{display:flex;flex-direction:column;justify-content:center;gap:2px;padding:4px 3px;flex-shrink:0}
 .rc{
   background:none;border:none;color:var(--t3);cursor:pointer;
@@ -151,14 +162,21 @@ body{
 .rc:hover{background:var(--s3);color:var(--t1)}
 .rc.dl:hover{color:#e05555}
 
-/* ── 행 레이블 ── */
+/* ââ í ë ì´ë¸ ââ */
 .rlabel{
-  min-width:96px;max-width:96px;
+  width:var(--rlw,96px);min-width:0;max-width:none;flex-shrink:0;
   display:flex;align-items:center;gap:5px;padding:6px 8px;
   background:var(--lb,#1f1f1f);
   border-right:1px solid var(--acc,#c8a84b);
-  align-self:stretch;
+  align-self:stretch;position:relative;
 }
+/* rlabel ëë¹ ë¦¬ì¬ì´ì¦ í¸ë¤ */
+.rl-rsz{
+  position:absolute;right:-3px;top:0;bottom:0;width:6px;
+  cursor:col-resize;z-index:5;user-select:none;
+}
+.rl-rsz:hover,.rl-rsz.dragging{background:rgba(155,125,50,.4)}
+
 .licon-slot{
   width:36px;height:36px;flex-shrink:0;border-radius:4px;
   border:1px dashed var(--t3);
@@ -168,7 +186,8 @@ body{
 }
 .licon-slot:hover{border-color:var(--acc);color:var(--acc)}
 .licon-slot img{width:34px;height:34px;object-fit:contain;border-radius:3px}
-.licon-slot.svt img{border-radius:4px}.licon-slot .ldel{
+.licon-slot.svt img{border-radius:4px}
+.licon-slot .ldel{
   display:none;position:absolute;inset:0;
   background:rgba(0,0,0,.75);
   align-items:center;justify-content:center;font-size:12px;color:#e05555;cursor:pointer;
@@ -180,10 +199,10 @@ body{
   outline:none;width:100%;line-height:1.4;resize:none;font-family:inherit;
 }
 
-/* ── 행 아이템 영역 ── */
+/* ââ í ìì´í ìì­ ââ */
 .ritems{display:flex;flex-wrap:wrap;gap:4px;padding:6px 8px;flex:1;align-items:center;min-height:52px}
 
-/* 아이템 카드 — 아이콘만 */
+/* ìì´í ì¹´ë */
 .ric{
   width:44px;height:44px;border-radius:5px;
   border:1px solid var(--icbd,#2a2a2a);
@@ -194,41 +213,54 @@ body{
 .ric:hover{border-color:var(--acc,#c8a84b)}
 .ric:hover .rdel{display:flex}
 .ric img{width:36px;height:36px;object-fit:contain}
-.ric.svt img{border-radius:4px}.rdel{
+.ric.svt img{border-radius:4px}
+.rdel{
   display:none;position:absolute;inset:0;
   background:rgba(0,0,0,.7);border-radius:4px;
   align-items:center;justify-content:center;font-size:13px;color:#e05555;
 }
 .empty-hint{font-size:10px;color:var(--t3);padding:2px 4px}
 
-/* ── 테마 (PNG 출력 스타일) ── */
+/* ââ íë§ ââ */
 .th-dark {--eb:#111;--ehb:#1a1a1a;--rb:#1a1a1a;--lb:#1f1f1f;--rline:#2a2a2a;--eline:#2a2a2a;--icbg:#111;--icbd:#2a2a2a;--acc:#c8a84b;--ltc:#e8e8e8}
 .th-warm {--eb:#130e06;--ehb:#1e1508;--rb:#1e1508;--lb:#251a09;--rline:#3a2a10;--eline:#3a2a10;--icbg:#130e06;--icbd:#3a2a10;--acc:#d4924a;--ltc:#e8e0d0}
 .th-cool {--eb:#080e18;--ehb:#0e1826;--rb:#0e1826;--lb:#121e30;--rline:#1e3050;--eline:#1e3050;--icbg:#080e18;--icbd:#1e3050;--acc:#6ea8d4;--ltc:#d0dce8}
 .th-light{--eb:#f5f5f2;--ehb:#eae8e2;--rb:#eae8e2;--lb:#dedad2;--rline:#d0ccc0;--eline:#d0ccc0;--icbg:#f5f5f2;--icbd:#d0ccc0;--acc:#8a6f28;--ltc:#1a1a1a}
 
-/* ── 레이아웃: 클래스별 ── */
+/* ââ ë ì´ìì: í´ëì¤ë³ (í2) ââ */
 .tpl-class .ex-body{gap:1px;padding:1px}
 .tpl-class .trow{border-radius:0;border-left:none;border-right:none}
 .tpl-class .trow:first-child{border-top:1px solid var(--rline,#2a2a2a)}
-.tpl-class .rlabel{min-width:106px;max-width:106px;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:5px;padding:8px 6px}
+.tpl-class .rlabel{
+  width:var(--rlw,106px);min-width:0;max-width:none;
+  flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;gap:5px;padding:8px 6px;
+  border-right:none; /* íµí© ì â êµ¬ë¶ì  ì ê±° */
+}
 .tpl-class .licon-slot{width:64px;height:64px;border-radius:5px}
 .tpl-class .licon-slot img{width:60px;height:60px}
 .tpl-class .ltxt{text-align:center;font-size:11px}
 .tpl-class .ritems{flex-direction:column;align-items:flex-start;gap:4px;padding:7px 10px}
-.tpl-class .rit-tag-input{background:none;border:none;border-bottom:1px dashed var(--t3,#aaa);color:var(--acc,#c8a84b);font-size:10px;font-weight:700;outline:none;width:180px;padding:0;font-family:inherit;letter-spacing:.02em;cursor:text}
+.tpl-class .rit-tag-input{
+  background:none;border:none;border-bottom:1px dashed var(--t3,#aaa);
+  color:var(--acc,#c8a84b);font-size:10px;font-weight:700;outline:none;
+  width:180px;padding:0;font-family:inherit;letter-spacing:.02em;cursor:text
+}
 .tpl-class .rit-icons{display:flex;flex-wrap:wrap;gap:4px}
 
-/* ── 레이아웃: 요일별 ── */
+/* ââ ë ì´ìì: ìì¼ë³ (í1) ââ */
 .tpl-daily .ex-body{gap:2px;padding:4px}
 .tpl-daily .trow.hdr-row{border-color:var(--acc,#c8a84b)}
-.tpl-daily .trow.hdr-row .rlabel{background:var(--acc,#c8a84b);border-right-color:transparent;min-width:0;max-width:none;flex:1;justify-content:center}
+.tpl-daily .trow.hdr-row .rlabel{
+  background:var(--acc,#c8a84b);border-right-color:transparent;
+  min-width:0;max-width:none;width:auto;flex:1;justify-content:center;
+}
 .tpl-daily .trow.hdr-row .licon-slot{display:none}
 .tpl-daily .trow.hdr-row .ltxt{color:#fff;font-weight:700;font-size:12px;text-align:center;letter-spacing:.06em}
 .tpl-daily .trow.hdr-row .ritems{display:none}
-.tpl-daily .trow:not(.hdr-row) .rlabel{min-width:82px;max-width:82px}
+.tpl-daily .trow:not(.hdr-row) .rlabel{width:var(--rlw,82px);min-width:0;max-width:none}
 
-/* ── 모달 ── */
+/* ââ ëª¨ë¬ ââ */
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;align-items:center;justify-content:center}
 .modal-bg.open{display:flex}
 .modal{background:var(--s1);border:1px solid var(--line);border-radius:8px;width:360px;max-height:520px;display:flex;flex-direction:column;overflow:hidden}
@@ -239,19 +271,13 @@ body{
 .mtab:hover{color:var(--t1)}
 .mtab.active{color:var(--acc);border-bottom-color:var(--acc)}
 .modal-srch{padding:8px;border-bottom:1px solid var(--line)}
-.modal-srch input{width:100%;background:var(--bg);color:var(--t1);border:1px solid var(--line);border-radius:4px;padding:6px 9px;font-size:12px;outline:none}
+.modal-srch input{width:100%;background:var(--s2);color:var(--t1);border:1px solid var(--line);border-radius:4px;padding:6px 9px;font-size:12px;outline:none}
 .modal-pool{flex:1;overflow-y:auto;padding:8px;display:flex;flex-wrap:wrap;gap:5px;align-content:flex-start}
 .modal-foot{padding:8px 12px;border-top:1px solid var(--line);font-size:10px;color:var(--t3);display:flex;align-items:center;justify-content:space-between}
 
-/* 스피너 */
+/* ì¤í¼ë */
 .spin{display:inline-block;width:13px;height:13px;border:2px solid var(--line);border-top-color:var(--acc);border-radius:50%;animation:sp .6s linear infinite;vertical-align:middle}
 @keyframes sp{to{transform:rotate(360deg)}}
-
-/* 모달 내부도 라이트에 맞게 */
-.modal{background:var(--s1);border:1px solid var(--line);border-radius:8px;width:360px;max-height:520px;display:flex;flex-direction:column;overflow:hidden}
-.modal-top{padding:12px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px}
-.modal-top h3{flex:1;font-size:13px;font-weight:500;color:var(--t1)}
-.modal-srch input{background:var(--s2);color:var(--t1);border:1px solid var(--line)}
 
 .statusbar{padding:4px 14px;background:var(--s1);border-top:1px solid var(--line);font-size:10px;color:var(--t3);flex-shrink:0}
 </style>
@@ -260,7 +286,7 @@ body{
 
 <div class="topbar">
   <h1>FGO <span>Table Maker</span></h1>
-  <span class="hint">행 추가 → 왼쪽 아이콘 클릭으로 추가 · 레이블에 아이콘+텍스트 가능</span>
+  <span class="hint">í ì¶ê° â ì¼ìª½ ìì´ì½ í´ë¦­ì¼ë¡ ì¶ê° Â· ë ì´ë¸ì ìì´ì½+íì¤í¸ ê°ë¥</span>
   <select class="tb-sel" id="gSrv" onchange="changeSrv()" style="margin-left:auto">
     <option value="KR">KR</option>
     <option value="JP">JP</option>
@@ -268,96 +294,98 @@ body{
 </div>
 
 <div class="wrap">
-  <!-- ══ LEFT PANEL ══ -->
-  <div class="left">
+  <!-- ââ LEFT PANEL ââ -->
+  <div class="left" id="leftPanel">
+    <div class="left-rsz" id="leftRsz"></div>
     <div class="tabs">
-      <button class="tab active" data-tab="mat" onclick="switchTab('mat')">재료</button>
-      <button class="tab" data-tab="svt" onclick="switchTab('svt')">서번트</button>
-      <button class="tab" data-tab="evt" onclick="switchTab('evt')">이벤트</button>
+      <button class="tab active" data-tab="mat" onclick="switchTab('mat')">ì¬ë£</button>
+      <button class="tab" data-tab="svt" onclick="switchTab('svt')">ìë²í¸</button>
+      <button class="tab" data-tab="evt" onclick="switchTab('evt')">ì´ë²¤í¸</button>
     </div>
     <div class="lp-search">
-      <input type="text" id="lpSrch" placeholder="이름 검색…" oninput="filterPool()"/>
+      <input type="text" id="lpSrch" placeholder="ì´ë¦ ê²ìâ¦" oninput="filterPool()"/>
     </div>
-    <div class="pool" id="pool"><div style="padding:12px;color:#3a4060;font-size:11px"><span class="spin"></span> 로딩 중…</div></div>
-    <div class="lp-foot" id="lpFoot">—</div>
+    <div class="pool" id="pool"><div style="padding:12px;color:var(--t2);font-size:11px"><span class="spin"></span> ë¡ë© ì¤â¦</div></div>
+    <div class="lp-foot" id="lpFoot">â</div>
   </div>
 
-  <!-- ══ RIGHT PANEL ══ -->
+  <!-- ââ RIGHT PANEL ââ -->
   <div class="right">
     <div class="toolbar">
-      <input class="tbtitle" type="text" id="tableTitle" value="드롭 테이블" oninput="syncTitle()"/>
+      <input class="tbtitle" type="text" id="tableTitle" value="ëë¡­ íì´ë¸" oninput="syncTitle()"/>
       <div class="sep"></div>
       <select class="tb-sel" id="theme" onchange="applyTheme()">
-        <option value="th-light">라이트</option>
-        <option value="th-warm">웜</option>
-        <option value="th-cool">쿨</option>
-        <option value="th-dark">다크</option>
+        <option value="th-light">ë¼ì´í¸</option>
+        <option value="th-warm">ì</option>
+        <option value="th-cool">ì¿¨</option>
+        <option value="th-dark">ë¤í¬</option>
       </select>
       <div class="sep"></div>
       <select class="tb-sel" id="layout" onchange="applyLayout()">
-        <option value="daily">표1</option>
-        <option value="class">표2</option>
+        <option value="daily">í1</option>
+        <option value="class">í2</option>
       </select>
-      <button class="btn" onclick="addRow()">+ 행 추가</button>
-      <button class="btn" id="btnHdr" onclick="addHeaderRow()" style="display:none">+ 헤더</button>
-      <button class="btn" onclick="clearAll()" style="margin-left:auto;color:var(--t3)">초기화</button>
-      <button class="btn save" onclick="exportPNG()">PNG 저장</button>
+      <button class="btn" onclick="addRow()">+ í ì¶ê°</button>
+      <button class="btn" id="btnHdr" onclick="addHeaderRow()" style="display:none">+ í¤ë</button>
+      <button class="btn" onclick="clearAll()" style="margin-left:auto;color:var(--t3)">ì´ê¸°í</button>
+      <button class="btn save" onclick="exportPNG()">PNG ì ì¥</button>
     </div>
 
     <div class="cvs-scroll">
       <div id="exportArea" class="th-light">
-        <div class="ex-hdr"><span class="ex-ttl" id="exTtl">드롭 테이블</span></div>
+        <div class="ex-hdr"><span class="ex-ttl" id="exTtl">ëë¡­ íì´ë¸</span></div>
         <div class="ex-body" id="exBody">
-          <div style="padding:40px;text-align:center;color:#2a3148;font-size:12px">
-            [+ 행 추가] 후 왼쪽에서 아이콘 클릭
+          <div style="padding:40px;text-align:center;color:#888;font-size:12px">
+            [+ í ì¶ê°] í ì¼ìª½ìì ìì´ì½ í´ë¦­
           </div>
         </div>
       </div>
+      <div id="eaResizer"></div>
     </div>
-    <div class="statusbar" id="sb">준비</div>
+    <div class="statusbar" id="sb">ì¤ë¹</div>
   </div>
 </div>
 
-<!-- ══ ICON PICKER MODAL (행 레이블 아이콘용) ══ -->
+<!-- ââ ICON PICKER MODAL ââ -->
 <div class="modal-bg" id="iconModal" onclick="closeModal(event)">
   <div class="modal" onclick="event.stopPropagation()">
     <div class="modal-top">
-      <h3>레이블 아이콘 선택</h3>
-      <button class="btn" onclick="closeModal()" style="padding:3px 8px;font-size:11px">닫기</button>
+      <h3>ë ì´ë¸ ìì´ì½ ì í</h3>
+      <button class="btn" onclick="closeModal()" style="padding:3px 8px;font-size:11px">ë«ê¸°</button>
     </div>
     <div class="modal-tabs">
-      <button class="mtab active" data-mtab="mat" onclick="switchMtab('mat')">재료</button>
-      <button class="mtab" data-mtab="svt" onclick="switchMtab('svt')">서번트</button>
-      <button class="mtab" data-mtab="evt" onclick="switchMtab('evt')">이벤트</button>
+      <button class="mtab active" data-mtab="mat" onclick="switchMtab('mat')">ì¬ë£</button>
+      <button class="mtab" data-mtab="svt" onclick="switchMtab('svt')">ìë²í¸</button>
+      <button class="mtab" data-mtab="evt" onclick="switchMtab('evt')">ì´ë²¤í¸</button>
     </div>
-    <div class="modal-srch"><input type="text" id="mSrch" placeholder="검색…" oninput="filterModal()"/></div>
+    <div class="modal-srch"><input type="text" id="mSrch" placeholder="ê²ìâ¦" oninput="filterModal()"/></div>
     <div class="modal-pool" id="mPool"></div>
     <div class="modal-foot">
-      <span id="mFoot">클릭하면 행 레이블 아이콘으로 설정</span>
-      <button class="btn" onclick="clearLabelIcon()" style="padding:3px 8px;font-size:11px;color:#da3633">아이콘 제거</button>
+      <span id="mFoot">í´ë¦­íë©´ í ë ì´ë¸ ìì´ì½ì¼ë¡ ì¤ì </span>
+      <button class="btn" onclick="clearLabelIcon()" style="padding:3px 8px;font-size:11px;color:#da3633">ìì´ì½ ì ê±°</button>
     </div>
   </div>
 </div>
 
 <script>
-/* ══ STATE ══ */
+/* ââ STATE ââ */
 let server = 'KR';
-let data = { mat:[], svt:[], evt:[] }; // loaded pool data
-let loaded = {};          // which tabs are loaded
-let loading = {};         // 중복 로딩 방지 가드
+let data = { mat:[], svt:[], evt:[] };
+let loaded = {};
+let loading = {};
 let curTab = 'mat';
 let curMtab = 'mat';
 
-let rows = [];            // {id, label, labelIcon, items:[{id,name,icon,isSvt}], isHeader, tag}
+let rows = [];
 let activeRowId = null;
 let rowCnt = 0;
-let modalTargetRowId = null; // which row's label icon we're picking
-let curLayout = 'daily'; // 'class' | 'daily'
+let modalTargetRowId = null;
+let curLayout = 'daily'; // 'daily' | 'class'
 
-/* ══ INIT ══ */
-window.onload = () => setTimeout(() => { switchTab('mat'); applyLayout(); }, 300);
+/* ââ INIT ââ */
+window.onload = () => setTimeout(() => { switchTab('mat'); applyLayout(); initResize(); }, 300);
 
-/* ══ SERVER ══ */
+/* ââ SERVER ââ */
 function changeSrv() {
   server = document.getElementById('gSrv').value;
   data = { mat:[], svt:[], evt:[] };
@@ -366,7 +394,7 @@ function changeSrv() {
   loadTab(curTab);
 }
 
-/* ══ TAB SWITCH ══ */
+/* ââ TAB SWITCH ââ */
 function switchTab(tab) {
   curTab = tab;
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
@@ -383,13 +411,13 @@ function switchMtab(tab) {
   else renderModal(data[tab]);
 }
 
-/* ══ LOAD DATA ══ */
+/* ââ LOAD DATA ââ */
 async function loadTab(tab) {
   if (loaded[tab]) { renderPool(data[tab]); return; }
-  if (loading[tab]) return; // 이미 로딩 중이면 무시
+  if (loading[tab]) return;
   loading[tab] = true;
-  setPool('<div style="padding:12px;color:var(--t2);font-size:11px"><span class="spin"></span> 로딩 중…</div>');
-  setFoot('로딩 중…');
+  setPool('<div style="padding:12px;color:var(--t2);font-size:11px"><span class="spin"></span> ë¡ë© ì¤â¦</div>');
+  setFoot('ë¡ë© ì¤â¦');
   try {
     if (tab === 'mat' || tab === 'evt') {
       if (!loaded._items) await loadAllItems();
@@ -398,11 +426,11 @@ async function loadTab(tab) {
     loaded[tab] = true;
     loading[tab] = false;
     renderPool(data[tab]);
-    setFoot(`${data[tab].length}개`);
+    setFoot(`${data[tab].length}ê°`);
   } catch(e) {
     loading[tab] = false;
-    setPool(`<div style="padding:12px;color:#c0392b;font-size:11px">오류: ${e.message} <button onclick="loading['${tab}']=false;loadTab('${tab}')" style="margin-left:6px;padding:2px 6px;font-size:11px;cursor:pointer">재시도</button></div>`);
-    setFoot('실패');
+    setPool(`<div style="padding:12px;color:#c0392b;font-size:11px">ì¤ë¥: ${e.message} <button onclick="loading['${tab}']=false;loadTab('${tab}')" style="margin-left:6px;padding:2px 6px;font-size:11px;cursor:pointer">ì¬ìë</button></div>`);
+    setFoot('ì¤í¨');
   }
 }
 
@@ -429,19 +457,18 @@ async function loadAllItems() {
       );
       break;
     } catch(e) {
-      if (attempt === 2) throw new Error(`아이템 로드 실패 (${e.message})`);
+      if (attempt === 2) throw new Error(`ìì´í ë¡ë ì¤í¨ (${e.message})`);
     }
   }
-  if (!items) throw new Error('아이템 목록 로드 실패');
+  if (!items) throw new Error('ìì´í ëª©ë¡ ë¡ë ì¤í¨');
 
-  const evtTypes  = new Set(['eventItem','tdAndEventPoint','eventRewardSet','eventPoint']);
+  const evtTypes = new Set(['eventItem','tdAndEventPoint','eventRewardSet','eventPoint']);
 
   data.mat = []; data.evt = [];
 
-  // 이미지 없거나 불필요한 아이템 숨김
   const HIDDEN_IDS = new Set([
     301, 6008, 6108, 6208, 6504, 7008, 7108,
-    5, 6, 7, 11, 17, 18, 46, 48,49, 103, 104, 300, 1000, 2000, 4001,
+    5, 6, 7, 11, 17, 18, 46, 48, 49, 103, 104, 300, 1000, 2000, 4001,
     5000, 5001, 5002, 5003, 80059,
     94012301, 94012303, 94013001, 94013002, 94013006, 94013007, 94013008,
     94013706, 94015308, 94016904, 94016905, 94016906, 94016907, 94016908,
@@ -458,52 +485,80 @@ async function loadAllItems() {
 
   for (const it of items) {
     if (!it.id || !it.name) continue;
-     if (HIDDEN_IDS.has(it.id)) continue;
+    if (HIDDEN_IDS.has(it.id)) continue;
     if (HIDDEN_TYPES.has(it.type)) continue;
-    // icon: basic 포맷은 icon 필드 없을 수 있음 → 정적 URL로 대체
     const icon = (it.icon && it.icon.startsWith('http'))
       ? it.icon
       : `https://static.atlasacademy.io/${server}/Items/${it.id}.png`;
     const obj = { id: it.id, name: it.name, icon, isSvt: false, itemType: it.type, priority: it.priority || 0 };
     const t = it.type || '';
-    if (evtTypes.has(t))  data.evt.push(obj);
+    if (evtTypes.has(t))       data.evt.push(obj);
     else if (it.id >= 94000000) data.evt.push(obj);
-      else data.mat.push(obj);
+    else                        data.mat.push(obj);
   }
 
-  // ── 재료 정렬 ──
+  // ââ ì¬ë£ ì ë ¬ ââ
+  // skillLvUp ì»¤ì¤í ìì 59ê° â í¼ì¤ â ëª¨ë´ë¨¼í¸ â ëë¨¸ì§
+  const SKILL_ORDER = [
+    6503,6516,6512,6505,6522,6527,6530,6533,6534,6549,6551,6552,6554,6555,
+    6502,6508,6515,6509,6501,6510,6511,6514,6513,6524,6526,6532,6535,6537,
+    6536,6538,6541,6543,6545,6547,6550,6553,6556,6557,6559,
+    6507,6517,6506,6518,6519,6520,6521,6523,6525,6528,6529,6531,
+    6539,6540,6542,6544,6546,6548,6558,6560,
+  ];
+  const SKILL_MAP = new Map(SKILL_ORDER.map((id,i) => [id, i]));
+
   function matKey(it) {
     const t = it.itemType, id = it.id, p = it.priority;
-    if (t === 'tdLvUp' && id >= 7001 && id <= 7107)
-      return [0, id < 7100 ? 0 : 2, p];
-    if (t === 'skillLvUp' && id >= 6500 && id < 6999)
-      return [0, p < 200 ? 0 : p < 240 ? 1 : 2, p];
+    // skillLvUp ì»¤ì¤í ìì
+    if (t === 'skillLvUp' && id >= 6500 && id < 6999) {
+      const idx = SKILL_MAP.has(id) ? SKILL_MAP.get(id) : 999;
+      return [0, 0, idx];
+    }
+    // í¼ì¤ (tdLvUp, id < 7100)
+    if (t === 'tdLvUp' && id >= 7001 && id < 7100) return [0, 1, p];
+    // ëª¨ë´ë¨¼í¸ (tdLvUp, id >= 7100)
+    if (t === 'tdLvUp' && id >= 7100 && id <= 7107) return [0, 2, p];
+    // ì ì¹ê²°ì 
     if (id === 6999) return [1, 0, 0];
+    // íìÂ·ë§ìÂ·ë¹ì
     if (t === 'skillLvUp' && id >= 6001 && id <= 6007) return [2, 0, id];
     if (t === 'skillLvUp' && id >= 6101 && id <= 6107) return [3, 0, id];
     if (t === 'skillLvUp' && id >= 6201 && id <= 6207) return [4, 0, id];
+    // ë³ë¹ìëª¨ëÂ·í ì¹
     if (id >= 50 && id <= 53) return [5, 0, id];
+    // ì¬ê³¼
     if (t === 'apRecover' || t === 'apAdd') return [6, 0, p];
+    // QP
     if (t === 'qp') return [7, 0, 0];
+    // ì±ì ì
     if (t === 'stone' || t === 'chargeStone' || t === 'netmarbleChargeStone') return [8, 0, 0];
+    // ë§ëíë¦¬ì¦
     if (t === 'mana') return [9, 0, 0];
+    // ì±ì í¸
     if (t === 'stoneFragments') return [10, 0, 0];
+    // íë ì¦í¬ì¸í¸
     if (t === 'friendPoint') return [11, 0, 0];
+    // ì±ë°°ìë¬¼ë°©ì¸Â·ì±ë°°
     if (id === 7998) return [12, 0, 0];
     if (id === 7999) return [13, 0, 0];
     return [99, 0, p];
   }
-  data.mat.sort((a,b)=>{const ka=matKey(a),kb=matKey(b);for(let i=0;i<ka.length;i++)if(ka[i]!==kb[i])return ka[i]-kb[i];return 0;});
+  data.mat.sort((a,b) => {
+    const ka = matKey(a), kb = matKey(b);
+    for (let i = 0; i < ka.length; i++) if (ka[i] !== kb[i]) return ka[i] - kb[i];
+    return 0;
+  });
 
-  // ── 이벤트 정렬: 최신 먼저, 동→은→금, 상설 하단 ──
-  const PERM_NAMES=['사쿠라 칩','사쿠라 머니','키아라 퍼니셔','BB$','드림 칩'];
-  data.evt.sort((a,b)=>{
-    const pa=PERM_NAMES.some(k=>a.name.includes(k))?1:0;
-    const pb=PERM_NAMES.some(k=>b.name.includes(k))?1:0;
-    if(pa!==pb)return pa-pb;
-    const ra=a.priority||a.id, rb=b.priority||b.id;
-    const ga=Math.floor(ra/1000),gb=Math.floor(rb/1000);
-    if(ga!==gb)return gb-ga;
+  // ââ ì´ë²¤í¸ ì ë ¬ ââ
+  const PERM_NAMES = ['ì¬ì¿ ë¼ ì¹©','ì¬ì¿ ë¼ ë¨¸ë','í¤ìë¼ í¼ëì','BB$','ëë¦¼ ì¹©'];
+  data.evt.sort((a,b) => {
+    const pa = PERM_NAMES.some(k=>a.name.includes(k)) ? 1 : 0;
+    const pb = PERM_NAMES.some(k=>b.name.includes(k)) ? 1 : 0;
+    if (pa!==pb) return pa-pb;
+    const ra = a.priority||a.id, rb = b.priority||b.id;
+    const ga = Math.floor(ra/1000), gb = Math.floor(rb/1000);
+    if (ga!==gb) return gb-ga;
     return ra-rb;
   });
 
@@ -511,7 +566,6 @@ async function loadAllItems() {
 }
 
 async function loadServants() {
-  // KR/JP 모두 basic_svt.json 사용 (JP는 추가로 lang_en 시도)
   const candidates = server === 'JP'
     ? ['basic_svt_lang_en.json', 'basic_svt.json']
     : ['basic_svt.json'];
@@ -522,25 +576,23 @@ async function loadServants() {
       if (r.ok) break;
     } catch {}
   }
-  if (!r || !r.ok) throw new Error(`svt 로드 실패`);
+  if (!r || !r.ok) throw new Error('svt ë¡ë ì¤í¨');
   const svts = await r.json();
   data.svt = svts
-    .filter(s => s.collectionNo > 0 && s.type !== 'servantEquip') // 예장 제외
+    .filter(s => s.collectionNo > 0 && s.type !== 'servantEquip')
     .sort((a,b) => a.collectionNo - b.collectionNo)
     .map(s => ({
       id: s.id,
       name: s.name || `No.${s.collectionNo}`,
-      // API가 face URL을 직접 제공함 → 없으면 폴백
-      icon: s.face
-        || `https://static.atlasacademy.io/${server}/Faces/f_${s.id}.png`,
+      icon: s.face || `https://static.atlasacademy.io/${server}/Faces/f_${s.id}.png`,
       isSvt: true,
     }));
 }
 
-/* ══ RENDER POOL (left panel) ══ */
+/* ââ RENDER POOL ââ */
 function renderPool(items, parentId='pool', onClick=null) {
   const el = document.getElementById(parentId);
-  if (!items || !items.length) { el.innerHTML='<div style="padding:10px;color:#3a4060;font-size:11px">항목 없음</div>'; return; }
+  if (!items || !items.length) { el.innerHTML='<div style="padding:10px;color:var(--t3);font-size:11px">í­ëª© ìì</div>'; return; }
   el.innerHTML = items.slice(0,200).map(it => {
     const cls = it.isSvt ? 'pi svt' : 'pi';
     const fn = onClick ? `${onClick}(${it.id})` : `clickItem(${it.id})`;
@@ -553,7 +605,7 @@ function renderPool(items, parentId='pool', onClick=null) {
 
 function renderModal(items) {
   const el = document.getElementById('mPool');
-  if (!items || !items.length) { el.innerHTML='<div style="padding:10px;color:#3a4060;font-size:11px">항목 없음</div>'; return; }
+  if (!items || !items.length) { el.innerHTML='<div style="padding:10px;color:var(--t3);font-size:11px">í­ëª© ìì</div>'; return; }
   el.innerHTML = items.slice(0,200).map(it => {
     const cls = it.isSvt ? 'pi svt' : 'pi';
     return `<div class="${cls}" onclick="pickLabelIcon(${it.id})" title="${it.name}">
@@ -563,13 +615,13 @@ function renderModal(items) {
   }).join('');
 }
 
-/* ══ FILTER ══ */
+/* ââ FILTER ââ */
 function filterPool() {
   const q = document.getElementById('lpSrch').value.toLowerCase();
   const items = data[curTab] || [];
   const filtered = q ? items.filter(it => it.name.toLowerCase().includes(q)) : items;
   renderPool(filtered.slice(0,200));
-  setFoot(`${filtered.length}개${q?` (검색: ${q})`:''}`)
+  setFoot(`${filtered.length}ê°${q ? ` (ê²ì: ${q})` : ''}`);
 }
 
 function filterModal() {
@@ -579,7 +631,7 @@ function filterModal() {
   renderModal(filtered.slice(0,200));
 }
 
-/* ══ CLICK ITEM → ADD TO ROW ══ */
+/* ââ CLICK ITEM â ADD TO ROW ââ */
 function clickItem(itemId) {
   const item = findItem(itemId);
   if (!item) return;
@@ -588,7 +640,7 @@ function clickItem(itemId) {
   if (!row) return;
   row.items.push({...item});
   rerender();
-  setSb(`"${item.name}" → ${row.label}`);
+  setSb(`"${item.name}" â ${row.label}`);
 }
 
 function findItem(id) {
@@ -599,10 +651,10 @@ function findItem(id) {
   return null;
 }
 
-/* ══ ROW MANAGEMENT ══ */
+/* ââ ROW MANAGEMENT ââ */
 function addRow() {
   const id = ++rowCnt;
-  rows.push({ id, label: `행 ${id}`, labelIcon: null, items: [], isHeader: false, tag: '' });
+  rows.push({ id, label: `í ${id}`, labelIcon: null, items: [], isHeader: false, tag: '' });
   activeRowId = id;
   rerender();
   setTimeout(() => {
@@ -613,12 +665,12 @@ function addRow() {
 
 function addHeaderRow() {
   const id = ++rowCnt;
-  rows.push({ id, label: '일요일', labelIcon: null, items: [], isHeader: true, tag: '' });
+  rows.push({ id, label: '', labelIcon: null, items: [], isHeader: true, tag: '' });
   activeRowId = id;
   rerender();
   setTimeout(() => {
     const el = document.getElementById(`ltxt-${id}`);
-    if (el) { el.focus(); el.select(); }
+    if (el) { el.focus(); }
   }, 40);
 }
 
@@ -633,6 +685,8 @@ function applyLayout() {
   ea.classList.remove('tpl-class', 'tpl-daily');
   if (curLayout === 'class') ea.classList.add('tpl-class');
   else ea.classList.add('tpl-daily');
+  // ë ì´ìì ì í ì --rlw ì´ê¸°í (ê° ë ì´ìì CSS ê¸°ë³¸ê°ì¼ë¡ ë³µê·)
+  ea.style.removeProperty('--rlw');
   document.getElementById('btnHdr').style.display = (curLayout === 'daily') ? '' : 'none';
   rerender();
 }
@@ -664,15 +718,14 @@ function removeItem(rowId, idx) {
   rerender();
 }
 
-/* ══ LABEL ICON MODAL ══ */
+/* ââ LABEL ICON MODAL ââ */
 function openIconModal(rowId) {
   modalTargetRowId = rowId;
-  curMtab = curTab; // sync with current left tab
+  curMtab = curTab;
   document.querySelectorAll('.mtab').forEach(t => t.classList.toggle('active', t.dataset.mtab === curMtab));
   document.getElementById('mSrch').value = '';
   document.getElementById('iconModal').classList.add('open');
-  const items = data[curMtab] || [];
-  renderModal(items.slice(0,200));
+  renderModal((data[curMtab] || []).slice(0,200));
 }
 
 function closeModal(e) {
@@ -701,7 +754,7 @@ function clearLabelIcon() {
   modalTargetRowId = null;
 }
 
-/* ══ DRAG REORDER items within row ══ */
+/* ââ DRAG REORDER items within row ââ */
 let dragSrc = null;
 function dStart(e, rowId, idx) { dragSrc = {rowId, idx}; e.dataTransfer.effectAllowed='move'; }
 function dOver(e, rowId, idx) {
@@ -720,26 +773,86 @@ function dDrop(e, rowId, idx) {
   dragSrc = null; rerender();
 }
 
-/* ══ RENDER TABLE ══ */
+/* ââ RESIZE ââ */
+function makeDragger(onMove, onEnd) {
+  const mm = e2 => onMove(e2);
+  const mu = e2 => { document.removeEventListener('mousemove', mm); document.removeEventListener('mouseup', mu); if (onEnd) onEnd(); };
+  document.addEventListener('mousemove', mm);
+  document.addEventListener('mouseup', mu);
+}
+
+// rlabel ëë¹ ëëê·¸
+function rszLabel(e) {
+  e.preventDefault(); e.stopPropagation();
+  const ea = document.getElementById('exportArea');
+  const firstRl = ea.querySelector('.rlabel:not(.hdr-row .rlabel)');
+  const startW = firstRl ? firstRl.offsetWidth : 96;
+  const startX = e.clientX;
+  e.currentTarget.classList.add('dragging');
+  const handle = e.currentTarget;
+  makeDragger(
+    e2 => {
+      const w = Math.max(36, Math.min(320, startW + e2.clientX - startX));
+      ea.style.setProperty('--rlw', w + 'px');
+    },
+    () => handle.classList.remove('dragging')
+  );
+}
+
+function initResize() {
+  // ââ ì¢ì¸¡ í¨ë ëë¹ ââ
+  const leftEl = document.getElementById('leftPanel');
+  const leftRsz = document.getElementById('leftRsz');
+  leftRsz.addEventListener('mousedown', e => {
+    e.preventDefault();
+    const startX = e.clientX, startW = leftEl.offsetWidth;
+    leftRsz.classList.add('dragging');
+    makeDragger(
+      e2 => { leftEl.style.width = Math.max(140, Math.min(520, startW + e2.clientX - startX)) + 'px'; },
+      () => leftRsz.classList.remove('dragging')
+    );
+  });
+
+  // ââ ìµì¤í¬í¸ ìì­ ëì´ ââ
+  const eaRsz = document.getElementById('eaResizer');
+  eaRsz.addEventListener('mousedown', e => {
+    e.preventDefault();
+    const ea = document.getElementById('exportArea');
+    const startY = e.clientY, startH = ea.offsetHeight;
+    eaRsz.classList.add('dragging');
+    makeDragger(
+      e2 => {
+        const h = Math.max(60, startH + e2.clientY - startY);
+        ea.style.minHeight = h + 'px';
+      },
+      () => eaRsz.classList.remove('dragging')
+    );
+  });
+}
+
+/* ââ RENDER TABLE ââ */
 function rerender() {
   const body = document.getElementById('exBody');
   if (!rows.length) {
-    body.innerHTML='<div style="padding:40px;text-align:center;color:#2a3148;font-size:12px">[+ 행 추가] 후 왼쪽에서 아이콘 클릭</div>';
+    body.innerHTML='<div style="padding:40px;text-align:center;color:#888;font-size:12px">[+ í ì¶ê°] í ì¼ìª½ìì ìì´ì½ í´ë¦­</div>';
     return;
   }
 
   const mkCtrl = id => `<div class="rctrl" data-nex>
-    <button class="rc" onclick="moveRow(${id},-1);event.stopPropagation()">↑</button>
-    <button class="rc" onclick="moveRow(${id},+1);event.stopPropagation()">↓</button>
-    <button class="rc dl" onclick="removeRow(${id});event.stopPropagation()">✕</button>
+    <button class="rc" onclick="moveRow(${id},-1);event.stopPropagation()">â</button>
+    <button class="rc" onclick="moveRow(${id},+1);event.stopPropagation()">â</button>
+    <button class="rc dl" onclick="removeRow(${id});event.stopPropagation()">â</button>
   </div>`;
+
+  // rlabel ë¦¬ì¬ì´ì¦ í¸ë¤ (PNG ì ì¸ì© data-nex)
+  const rlRsz = `<div class="rl-rsz" data-nex onmousedown="rszLabel(event);event.stopPropagation()"></div>`;
 
   const mkIconSlot = row => row.labelIcon
     ? `<div class="licon-slot ${row.labelIcon.isSvt?'svt':''}" onclick="openIconModal(${row.id});event.stopPropagation()">
          <img src="${row.labelIcon.icon}" onerror="this.style.opacity='.3'" crossorigin="anonymous"/>
-         <span class="ldel" onclick="clearLicon(${row.id});event.stopPropagation()">✕</span>
+         <span class="ldel" onclick="clearLicon(${row.id});event.stopPropagation()">â</span>
        </div>`
-    : `<div class="licon-slot" onclick="openIconModal(${row.id});event.stopPropagation()" title="아이콘 추가">+</div>`;
+    : `<div class="licon-slot" onclick="openIconModal(${row.id});event.stopPropagation()" title="ìì´ì½ ì¶ê°">+</div>`;
 
   const mkRics = (row) => row.items.map((it,idx) =>
     `<div class="ric ${it.isSvt?'svt':''}"
@@ -750,7 +863,7 @@ function rerender() {
       ondrop="dDrop(event,${row.id},${idx})"
       title="${it.name}">
       <img src="${it.icon}" onerror="this.style.opacity='.2'" crossorigin="anonymous"/>
-      <div class="rdel" onclick="removeItem(${row.id},${idx});event.stopPropagation()">✕</div>
+      <div class="rdel" onclick="removeItem(${row.id},${idx});event.stopPropagation()">â</div>
     </div>`
   ).join('');
 
@@ -759,9 +872,9 @@ function rerender() {
     const isSel = row.id === activeRowId;
     const ctrl = mkCtrl(row.id);
     const iconSlot = mkIconSlot(row);
-    const ricsH = row.items.length ? mkRics(row) : `<span class="empty-hint">← 클릭해서 추가</span>`;
+    const ricsH = row.items.length ? mkRics(row) : `<span class="empty-hint">â í´ë¦­í´ì ì¶ê°</span>`;
 
-    /* ── 헤더 행 (요일별 구분자) ── */
+    /* ââ í¤ë í (í1 êµ¬ë¶ì) ââ */
     if (row.isHeader) {
       h += `<div class="trow hdr-row ${isSel?'sel':''}" onclick="setActive(${row.id})">
         ${ctrl}
@@ -775,7 +888,7 @@ function rerender() {
       continue;
     }
 
-    /* ── 클래스별 레이아웃 ── */
+    /* ââ í2 (í´ëì¤ë³) ââ */
     if (curLayout === 'class') {
       h += `<div class="trow ${isSel?'sel':''}" onclick="setActive(${row.id})">
         ${ctrl}
@@ -784,16 +897,17 @@ function rerender() {
           <textarea id="ltxt-${row.id}" class="ltxt" rows="2"
             oninput="updateLabel(${row.id},this.value)"
             onclick="event.stopPropagation()">${row.label}</textarea>
+          ${rlRsz}
         </div>
         <div class="ritems">
-          <input class="rit-tag-input" placeholder="소제목" value="${row.tag||''}"
+          <input class="rit-tag-input" placeholder="ìì ëª©" value="${row.tag||''}"
             oninput="updateTag(${row.id},this.value)"
             onclick="event.stopPropagation()"/>
           <div class="rit-icons">${ricsH}</div>
         </div>
       </div>`;
     } else {
-      /* ── 표1 (요일별) 일반 행 ── */
+      /* ââ í1 (ìì¼ë³) ì¼ë° í ââ */
       h += `<div class="trow ${isSel?'sel':''}" onclick="setActive(${row.id})">
         ${ctrl}
         <div class="rlabel">
@@ -801,6 +915,7 @@ function rerender() {
           <textarea id="ltxt-${row.id}" class="ltxt" rows="2"
             oninput="updateLabel(${row.id},this.value)"
             onclick="event.stopPropagation()">${row.label}</textarea>
+          ${rlRsz}
         </div>
         <div class="ritems">${ricsH}</div>
       </div>`;
@@ -808,23 +923,33 @@ function rerender() {
   }
   body.innerHTML = h;
 }
+
 function clearLicon(rowId) {
   const r = rows.find(r => r.id === rowId);
   if (r) { r.labelIcon = null; rerender(); }
 }
 
-/* ══ MISC ══ */
-function syncTitle() { document.getElementById('exTtl').textContent = document.getElementById('tableTitle').value || 'FGO 드롭 테이블'; }
-function applyTheme() { document.getElementById('exportArea').className = document.getElementById('theme').value; }
-function clearAll() { if (rows.length && confirm('전체 삭제?')) { rows=[]; activeRowId=null; rerender(); } }
+/* ââ MISC ââ */
+function syncTitle() { document.getElementById('exTtl').textContent = document.getElementById('tableTitle').value || 'ëë¡­ íì´ë¸'; }
+function applyTheme() {
+  const ea = document.getElementById('exportArea');
+  const curRlw = ea.style.getPropertyValue('--rlw');
+  const curMh = ea.style.minHeight;
+  ea.className = document.getElementById('theme').value;
+  // íë§ ë³ê²½ í CSS var/minHeight ë³µì
+  if (curRlw) ea.style.setProperty('--rlw', curRlw);
+  if (curMh) ea.style.minHeight = curMh;
+  applyLayout();
+}
+function clearAll() { if (rows.length && confirm('ì ì²´ ì­ì ?')) { rows=[]; activeRowId=null; rerender(); } }
 function setPool(h) { document.getElementById('pool').innerHTML = h; }
 function setFoot(t) { document.getElementById('lpFoot').textContent = t; }
 function setSb(t) { document.getElementById('sb').textContent = t; }
 
-/* ══ PNG EXPORT ══ */
+/* ââ PNG EXPORT ââ */
 async function exportPNG() {
   const area = document.getElementById('exportArea');
-  setSb('PNG 생성 중…');
+  setSb('PNG ìì± ì¤â¦');
 
   const nexEls = area.querySelectorAll('[data-nex]');
   nexEls.forEach(el => el.style.display='none');
@@ -848,26 +973,26 @@ async function exportPNG() {
 
     const canvas = await html2canvas(area, { backgroundColor:null, scale:2, useCORS:true, allowTaint:false, logging:false });
     const link = document.createElement('a');
-    const fname = (document.getElementById('tableTitle').value||'fgo_table').replace(/[^\w가-힣\s]/g,'').trim().replace(/\s+/g,'_')||'fgo_table';
+    const fname = (document.getElementById('tableTitle').value||'ëë¡­_íì´ë¸').replace(/[^\wê°-í£\s]/g,'').trim().replace(/\s+/g,'_')||'fgo_table';
     link.download = fname+'.png';
     link.href = canvas.toDataURL('image/png');
     link.click();
-    setSb('PNG 저장 완료 ✓');
-  } catch(e) { setSb('오류: '+e.message); }
+    setSb('PNG ì ì¥ ìë£ â');
+  } catch(e) { setSb('ì¤ë¥: '+e.message); }
   finally {
     nexEls.forEach(el => el.style.display='');
     if (selEl) selEl.classList.add('sel');
   }
 }
 
-/* ══ 인라인 핸들러에서 접근 가능하도록 전역 등록 ══ */
+/* ââ ì ì­ ë±ë¡ ââ */
 Object.assign(window, {
   changeSrv, switchTab, switchMtab,
   filterPool, filterModal,
   clickItem, addRow, addHeaderRow, removeRow, moveRow, setActive, updateLabel, removeItem,
   openIconModal, closeModal, pickLabelIcon, clearLabelIcon, clearLicon,
   syncTitle, applyTheme, applyLayout, updateTag, clearAll, exportPNG,
-  dStart, dOver, dLeave, dDrop,
+  dStart, dOver, dLeave, dDrop, rszLabel,
 });
 </script>
 </body>
