@@ -620,6 +620,7 @@ async function loadAllItems() {
   ]);
   const HIDDEN_TYPES = new Set(['itemSelect', 'svtCoin']);
 
+  const ETC_FORCE = new Set([2, 3, 6, 7, 11, 16, 50, 51, 52, 53, 100, 101, 102, 104, 6999, 7998, 7999]); // 전승결정·토치·과일·성정석/편·마나·성배 → '그외'
   for (const it of items) {
     if (!it.id || !it.name) continue;
     if (HIDDEN_IDS.has(it.id)) continue;
@@ -627,7 +628,7 @@ async function loadAllItems() {
     const icon = (it.icon && it.icon.startsWith('http'))
       ? it.icon
       : `https://static.atlasacademy.io/${server}/Items/${it.id}.png`;
-    const obj = { id: it.id, name: it.name, icon, isSvt: false, itemType: it.type, priority: it.priority || 0, bg: it.background || '' };
+    const obj = { id: it.id, name: it.name, icon, isSvt: false, itemType: it.type, priority: it.priority || 0, bg: ETC_FORCE.has(it.id) ? 'etc' : (it.background || '') };
     const t = it.type || '';
     if (evtTypes.has(t))       data.evt.push(obj);
     else if (it.id >= 94000000) data.evt.push(obj);
