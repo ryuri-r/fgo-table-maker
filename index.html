@@ -262,7 +262,8 @@ body{
 
 /* ── 레이아웃: 티어표 (표3) ── */
 .tpl-tier .ex-body{gap:0;padding:0}
-.tpl-tier .trow{border-radius:0;border-left:none;border-right:none;border-top:none;background:var(--eb,#111)}
+.tpl-tier .trow{border-radius:0;border-left:none;border-right:none;border-top:none;border-bottom:2px solid var(--eb,#111);background:var(--rb,#1a1a1a)}
+.tpl-tier .trow:last-child{border-bottom:none}
 .tpl-tier .trow:first-child{border-top:none}
 .tpl-tier .rlabel{
   width:var(--rlw,96px);min-width:0;max-width:none;
@@ -270,8 +271,8 @@ body{
   align-items:center;justify-content:center;padding:6px;
 }
 .tpl-tier .licon-slot{display:none}
-.tpl-tier .ltxt{color:#1a1a1a;font-weight:600;font-size:12px;text-align:center;height:auto;overflow:hidden}
-.tpl-tier .ritems{gap:2px;padding:2px;min-height:60px}
+.tpl-tier .ltxt{color:#1a1a1a;font-weight:700;font-size:13px;text-align:center;height:auto;overflow:hidden;letter-spacing:.02em}
+.tpl-tier .ritems{gap:2px;padding:2px 4px;min-height:60px}
 .tpl-tier .ric{width:56px;height:56px;border-radius:0;border:none;background:transparent}
 .tpl-tier .ric img{width:56px;height:56px;object-fit:cover}
 
@@ -397,6 +398,13 @@ body{
     <div class="lp-search">
       <input type="text" id="lpSrch" placeholder="이름 검색…" oninput="filterPool()"/>
     </div>
+    <div id="matFilters" class="ftab-row" style="display:flex;gap:2px;padding:5px 6px 4px;border-bottom:1px solid var(--line);flex-shrink:0">
+      <button class="ftab active" data-bg="" onclick="setMatFilter('')">전체</button>
+      <button class="ftab" data-bg="gold" onclick="setMatFilter('gold')">금테</button>
+      <button class="ftab" data-bg="silver" onclick="setMatFilter('silver')">은테</button>
+      <button class="ftab" data-bg="bronze" onclick="setMatFilter('bronze')">동테</button>
+      <button class="ftab" data-bg="etc" onclick="setMatFilter('etc')">그외</button>
+    </div>
     <div id="svtFilters" style="display:none">
       <div class="ftab-row" id="rarityFilters">
         <button class="ftab active" data-rarity="0" onclick="setRarityFilter(0)">전체</button>
@@ -504,8 +512,9 @@ let activeRowId = null;
 let rowCnt = 0;
 let modalTargetRowId = null;
 let curLayout = 'daily'; // 'daily' | 'class'
-let svtRarityFilter = 0; // 0=전체
-let svtClassFilter = ''; // ''=전체
+let svtRarityFilter = new Set(); // 빈 Set=전체 (다중선택)
+let svtClassFilter = new Set();  // 빈 Set=전체 (다중선택)
+let matBgFilter = new Set();     // 빈 Set=전체 (금테/은테/동테/그외)
 
 /* ══ INIT ══ */
 window.onload = () => setTimeout(() => { switchTab('mat'); applyLayout(); initResize(); }, 300);
@@ -525,6 +534,7 @@ function switchTab(tab) {
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
   document.getElementById('lpSrch').value = '';
   document.getElementById('svtFilters').style.display = (tab === 'svt') ? 'flex' : 'none';
+  document.getElementById('matFilters').style.display = (tab === 'mat') ? 'flex' : 'none';
   if (!loaded[tab]) loadTab(tab);
   else if (tab === 'svt') applySvtFilter();
   else renderPool(data[tab]);
@@ -617,7 +627,7 @@ async function loadAllItems() {
     const icon = (it.icon && it.icon.startsWith('http'))
       ? it.icon
       : `https://static.atlasacademy.io/${server}/Items/${it.id}.png`;
-    const obj = { id: it.id, name: it.name, icon, isSvt: false, itemType: it.type, priority: it.priority || 0 };
+    const obj = { id: it.id, name: it.name, icon, isSvt: false, itemType: it.type, priority: it.priority || 0, bg: it.background || '' };
     const t = it.type || '';
     if (evtTypes.has(t))       data.evt.push(obj);
     else if (it.id >= 94000000) data.evt.push(obj);
@@ -749,7 +759,13 @@ function renderModal(items) {
 function filterPool() {
   if (curTab === 'svt') { applySvtFilter(); return; }
   const q = document.getElementById('lpSrch').value.toLowerCase();
-  const items = data[curTab] || [];
+  let items = data[curTab] || [];
+  if (curTab === 'mat' && matBgFilter.size) {
+    items = items.filter(it => {
+      const std = ['gold','silver','bronze'].includes(it.bg);
+      return matBgFilter.has(it.bg) || (matBgFilter.has('etc') && !std);
+    });
+  }
   const filtered = q ? items.filter(it => it.name.toLowerCase().includes(q)) : items;
   renderPool(filtered.slice(0,200));
   setFoot(`${filtered.length}개${q ? ` (검색: ${q})` : ''}`);
@@ -954,24 +970,39 @@ function toggleTag(rowId) {
   if (r) { r.hideTag = !r.hideTag; rerender(); }
 }
 
-/* ══ SVT FILTER ══ */
+/* ══ SVT FILTER (다중선택 토글, 빈 Set=전체) ══ */
+function toggleSetFilter(set, val) {
+  // val이 falsy(전체) → 전부 해제
+  if (val === 0 || val === '') { set.clear(); return; }
+  if (set.has(val)) set.delete(val); else set.add(val);
+}
+function syncFtabs(sel, set, key, isNum) {
+  document.querySelectorAll(sel).forEach(b => {
+    const v = isNum ? +b.dataset[key] : b.dataset[key];
+    const isAll = isNum ? v === 0 : v === '';
+    b.classList.toggle('active', isAll ? set.size === 0 : set.has(v));
+  });
+}
 function setRarityFilter(r) {
-  svtRarityFilter = r;
-  document.querySelectorAll('#rarityFilters .ftab').forEach(b =>
-    b.classList.toggle('active', +b.dataset.rarity === r));
+  toggleSetFilter(svtRarityFilter, r);
+  syncFtabs('#rarityFilters .ftab', svtRarityFilter, 'rarity', true);
   applySvtFilter();
 }
 function setClassFilter(c) {
-  svtClassFilter = c;
-  document.querySelectorAll('#classFilters .ftab').forEach(b =>
-    b.classList.toggle('active', b.dataset.class === c));
+  toggleSetFilter(svtClassFilter, c);
+  syncFtabs('#classFilters .ftab', svtClassFilter, 'class', false);
   applySvtFilter();
+}
+function setMatFilter(bg) {
+  toggleSetFilter(matBgFilter, bg);
+  syncFtabs('#matFilters .ftab', matBgFilter, 'bg', false);
+  filterPool();
 }
 function applySvtFilter() {
   const q = document.getElementById('lpSrch').value.toLowerCase();
   let items = data.svt || [];
-  if (svtRarityFilter > 0) items = items.filter(s => s.rarity === svtRarityFilter);
-  if (svtClassFilter) items = items.filter(s => s.svtClass === svtClassFilter);
+  if (svtRarityFilter.size) items = items.filter(s => svtRarityFilter.has(s.rarity));
+  if (svtClassFilter.size) items = items.filter(s => svtClassFilter.has(s.svtClass));
   if (q) items = items.filter(it => it.name.toLowerCase().includes(q));
   renderPool(items.slice(0,500), 'pool');
   setFoot(`${items.length}개${q ? ` (검색: ${q})` : ''}`);
@@ -1239,7 +1270,7 @@ Object.assign(window, {
   syncTitle, applyTheme, applyLayout, updateTag, clearAll, exportPNG,
   dStart, dOver, dLeave, dDrop, dOverEnd, dLeaveEnd, dDropEnd, rszLabel,
   toggleLicon, toggleLabel, toggleTag,
-  setRarityFilter, setClassFilter, applySvtFilter,
+  setRarityFilter, setClassFilter, setMatFilter, applySvtFilter,
 });
 </script>
 </body>
