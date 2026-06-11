@@ -599,6 +599,21 @@ async function loadAllItems() {
   }
   if (!items) throw new Error('아이템 목록 로드 실패');
 
+  // KR 서버: JP 전용 재료를 일본 이름으로 병합
+  if (server === 'KR') {
+    try {
+      const jpItems = await fetchWithTimeout('https://api.atlasacademy.io/export/JP/nice_item.json', 8000);
+      const krIds = new Set(items.map(i => i.id));
+      const evtT = new Set(['eventItem','tdAndEventPoint','eventRewardSet','eventPoint']);
+      for (const ji of jpItems) {
+        if (krIds.has(ji.id)) continue;
+        if (evtT.has(ji.type) || ji.id >= 94000000) continue; // 재료만 (이벤트 제외)
+        ji._jpOnly = true;
+        items.push(ji);
+      }
+    } catch(e) { /* JP 병합 실패해도 KR만으로 진행 */ }
+  }
+
   const evtTypes = new Set(['eventItem','tdAndEventPoint','eventRewardSet','eventPoint']);
 
   data.mat = []; data.evt = [];
@@ -627,7 +642,7 @@ async function loadAllItems() {
     if (HIDDEN_TYPES.has(it.type)) continue;
     const icon = (it.icon && it.icon.startsWith('http'))
       ? it.icon
-      : `https://static.atlasacademy.io/${server}/Items/${it.id}.png`;
+      : `https://static.atlasacademy.io/${it._jpOnly ? 'JP' : server}/Items/${it.id}.png`;
     const obj = { id: it.id, name: it.name, icon, isSvt: false, itemType: it.type, priority: it.priority || 0, bg: ETC_FORCE.has(it.id) ? 'etc' : (it.background || '') };
     const t = it.type || '';
     if (evtTypes.has(t))       data.evt.push(obj);
