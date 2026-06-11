@@ -260,6 +260,21 @@ body{
 .tpl-daily .trow.hdr-row .ritems{display:none}
 .tpl-daily .trow:not(.hdr-row) .rlabel{width:var(--rlw,82px);min-width:0;max-width:none}
 
+/* ── 레이아웃: 티어표 (표3) ── */
+.tpl-tier .ex-body{gap:0;padding:0}
+.tpl-tier .trow{border-radius:0;border-left:none;border-right:none;border-top:none;background:var(--eb,#111)}
+.tpl-tier .trow:first-child{border-top:none}
+.tpl-tier .rlabel{
+  width:var(--rlw,96px);min-width:0;max-width:none;
+  background:var(--tierc,#ef9a9a);border-right:2px solid var(--eb,#111);
+  align-items:center;justify-content:center;padding:6px;
+}
+.tpl-tier .licon-slot{display:none}
+.tpl-tier .ltxt{color:#1a1a1a;font-weight:600;font-size:12px;text-align:center;height:auto;overflow:hidden}
+.tpl-tier .ritems{gap:2px;padding:2px;min-height:60px}
+.tpl-tier .ric{width:56px;height:56px;border-radius:0;border:none;background:transparent}
+.tpl-tier .ric img{width:56px;height:56px;object-fit:cover}
+
 /* ── 모달 ── */
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;align-items:center;justify-content:center}
 .modal-bg.open{display:flex}
@@ -415,7 +430,7 @@ body{
   <!-- ══ RIGHT PANEL ══ -->
   <div class="right">
     <div class="toolbar">
-      <input class="tbtitle" type="text" id="tableTitle" value="드롭 테이블" oninput="syncTitle()"/>
+      <input class="tbtitle" type="text" id="tableTitle" value="테이블" oninput="syncTitle()"/>
       <div class="sep"></div>
       <select class="tb-sel" id="theme" onchange="applyTheme()">
         <option value="th-light">라이트</option>
@@ -425,8 +440,9 @@ body{
       </select>
       <div class="sep"></div>
       <select class="tb-sel" id="layout" onchange="applyLayout()">
-        <option value="daily">표1</option>
-        <option value="class">표2</option>
+        <option value="daily">드롭테이블1</option>
+        <option value="class">드롭테이블2</option>
+        <option value="tier">표3 (티어표)</option>
       </select>
       <button class="btn" onclick="addRow()">+ 행 추가</button>
       <button class="btn" id="btnHdr" onclick="addHeaderRow()" style="display:none">+ 헤더</button>
@@ -437,7 +453,7 @@ body{
     <div class="cvs-scroll">
       <div class="ea-wrap">
       <div id="exportArea" class="th-light">
-        <div class="ex-hdr"><span class="ex-ttl" id="exTtl">드롭 테이블</span></div>
+        <div class="ex-hdr"><span class="ex-ttl" id="exTtl">테이블</span></div>
         <div class="ex-body" id="exBody">
           <div style="padding:40px;text-align:center;color:#888;font-size:12px">
             [+ 행 추가] 후 왼쪽에서 아이콘 클릭
@@ -483,6 +499,7 @@ let curTab = 'mat';
 let curMtab = 'mat';
 
 let rows = [];
+const TIER_COLORS = ['#ef9a9a','#efb78c','#eed28a','#e3e49a','#bcdfa4','#9eddbf','#9ccfdf','#a6bce8','#bdaae3','#e3a2cb','#d4b29a'];
 let activeRowId = null;
 let rowCnt = 0;
 let modalTargetRowId = null;
@@ -768,7 +785,7 @@ function findItem(id) {
 /* ══ ROW MANAGEMENT ══ */
 function addRow() {
   const id = ++rowCnt;
-  rows.push({ id, label: `행 ${id}`, labelIcon: null, items: [], isHeader: false, tag: '', hideLicon: false, hideLabel: false, hideTag: false });
+  rows.push({ id, label: `행 ${id}`, labelIcon: null, items: [], isHeader: false, tag: '', hideLicon: false, hideLabel: false, hideTag: false, color: TIER_COLORS[rows.length % TIER_COLORS.length] });
   activeRowId = id;
   rerender();
   setTimeout(() => {
@@ -796,12 +813,21 @@ function updateTag(id, v) {
 function applyLayout() {
   curLayout = document.getElementById('layout').value;
   const ea = document.getElementById('exportArea');
-  ea.classList.remove('tpl-class', 'tpl-daily');
+  ea.classList.remove('tpl-class', 'tpl-daily', 'tpl-tier');
   if (curLayout === 'class') ea.classList.add('tpl-class');
+  else if (curLayout === 'tier') ea.classList.add('tpl-tier');
   else ea.classList.add('tpl-daily');
   // 레이아웃 전환 시 --rlw 초기화 (각 레이아웃 CSS 기본값으로 복귀)
   ea.style.removeProperty('--rlw');
   document.getElementById('btnHdr').style.display = (curLayout === 'daily') ? '' : 'none';
+  // 표3 첫 진입 시 예시 행 (세이버 + 청밥)
+  if (curLayout === 'tier' && !rows.length) {
+    const id = ++rowCnt;
+    rows.push({ id, label: '세이버', labelIcon: null,
+      items: [{ name: '알트리아 펜드래곤', icon: 'https://static.atlasacademy.io/KR/Faces/f_1001000.png', isSvt: true }],
+      isHeader: false, tag: '', hideLicon: false, hideLabel: false, hideTag: false, color: TIER_COLORS[0] });
+    activeRowId = id;
+  }
   rerender();
 }
 
@@ -820,6 +846,14 @@ function moveRow(id, dir) {
 }
 
 function setActive(id) { activeRowId = id; rerender(); }
+
+function cycleColor(id) {
+  const r = rows.find(r => r.id === id);
+  if (!r) return;
+  const i = TIER_COLORS.indexOf(r.color || TIER_COLORS[0]);
+  r.color = TIER_COLORS[(i + 1) % TIER_COLORS.length];
+  rerender();
+}
 
 function updateLabel(id, v) {
   const r = rows.find(r => r.id === id);
@@ -1031,6 +1065,7 @@ function rerender() {
     const mkCtrl = id => `<div class="rctrl" data-nex>
     <button class="rc" onclick="moveRow(${id},-1);event.stopPropagation()">↑</button>
     <button class="rc" onclick="moveRow(${id},+1);event.stopPropagation()">↓</button>
+    ${curLayout==='tier'?`<button class="rc" onclick="cycleColor(${id});event.stopPropagation()" title="색 변경">◑</button>`:''}
     <button class="rc dl" onclick="removeRow(${id});event.stopPropagation()">✕</button>
   </div>`;
 
@@ -1102,6 +1137,18 @@ function rerender() {
           <div class="rit-icons">${ricsH}</div>
         </div>
       </div>`;
+    } else if (curLayout === 'tier') {
+      /* ── 표3 (티어표) ── */
+      h += `<div class="trow ${isSel?'sel':''}" onclick="setActive(${row.id})" style="--tierc:${row.color||'#ef9a9a'}">
+        ${ctrl}
+        <div class="rlabel" style="background:${row.color||'#ef9a9a'}">
+          <textarea id="ltxt-${row.id}" class="ltxt" rows="1"
+            oninput="updateLabel(${row.id},this.value)"
+            onclick="event.stopPropagation()">${row.label}</textarea>
+          ${rlRsz}
+        </div>
+        <div class="ritems">${ricsH}</div>
+      </div>`;
     } else {
       /* ── 표1 (요일별) 일반 행 ── */
       h += `<div class="trow ${isSel?'sel':''}" onclick="setActive(${row.id})">
@@ -1126,7 +1173,7 @@ function clearLicon(rowId) {
 }
 
 /* ══ MISC ══ */
-function syncTitle() { document.getElementById('exTtl').textContent = document.getElementById('tableTitle').value || '드롭 테이블'; }
+function syncTitle() { document.getElementById('exTtl').textContent = document.getElementById('tableTitle').value || '테이블'; }
 function applyTheme() {
   const ea = document.getElementById('exportArea');
   const curRlw = ea.style.getPropertyValue('--rlw');
